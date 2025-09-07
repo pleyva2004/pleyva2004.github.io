@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 
 interface Message {
   id: string;
@@ -14,14 +16,16 @@ interface ChatInterfaceProps {
   onClose: () => void;
 }
 
-// Mock responses removed - now using real API
-
 const quickReplies = [
   'Tell me about Pablo\'s experience',
   'What skills does Pablo have?',
   'Show me Pablo\'s projects',
   'What are Pablo\'s goals?'
 ];
+
+const API_URL = import.meta.env.MODE === 'development' 
+  ? "http://localhost:8000" 
+  : import.meta.env.VITE_API_URL;
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([
@@ -165,16 +169,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     }
   }, [isDragging, isResizing, dragStart, resizeStart, windowSize.width, windowSize.height]);
 
-  // API configuration
-  const API_URL = import.meta.env.VITE_API_URL;
 
-  // Real API integration
   const sendMessageToAPI = async (message: string): Promise<string> => {
-    console.log("Sending message to API");
-    console.log(message);
-    console.log("--------------------------------")
-    console.log(API_URL)
-    console.log("--------------------------------")
+    if (import.meta.env.MODE === 'development') {
+      console.log("Sending message to API");
+      console.log(message);
+      console.log("--------------------------------")
+      console.log(API_URL)
+      console.log("--------------------------------")
+    }
+
     try {
       const response = await fetch(`${API_URL}/ask`, {
         method: 'POST',
@@ -351,6 +355,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                     >
                       <div className="text-sm leading-relaxed">
                         <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
                           components={{
                             h1: ({node, ...props}) => <h1 className="text-lg font-bold mb-3 mt-2" {...props} />,
                             h2: ({node, ...props}) => <h2 className="text-base font-bold mb-2 mt-3" {...props} />,
@@ -362,8 +367,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                             strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
                             em: ({node, ...props}) => <em className="italic" {...props} />,
                             code: ({node, ...props}) => <code className="bg-black/20 px-1 py-0.5 rounded text-xs font-mono" {...props} />,
-                            pre: ({node, ...props}) => <pre className="bg-black/20 p-2 rounded mt-2 mb-2 text-xs font-mono overflow-x-auto" {...props} />
-                          }}
+                            pre: ({node, ...props}) => <pre className="bg-black/20 p-2 rounded mt-2 mb-2 text-xs font-mono overflow-x-auto" {...props} />,
+                            a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline" />,
+                          }}  
                         >
                           {message.text}
                         </ReactMarkdown>
@@ -416,7 +422,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
         {/* Input */}
         <form onSubmit={handleSubmit} className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-sm">
-          <div className="flex items-end space-x-2">
+          <div className="flex items-center space-x-2">
             <div className="flex-1 relative">
               <textarea
                 ref={textareaRef}
@@ -424,16 +430,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask me anything..."
-                className="w-full bg-white/10 backdrop-blur-sm border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder-white/60 resize-none overflow-hidden"
+                className="w-full bg-white/10 backdrop-blur-sm border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 placeholder-white/60 resize-none overflow-hidden"
+                style={{ 
+                  minHeight: '40px',
+                  '--tw-ring-color': userColor + '90'
+                } as React.CSSProperties & { '--tw-ring-color': string }}
                 disabled={isTyping}
                 rows={1}
-                style={{ minHeight: '40px' }}
               />
             </div>
             <button
               type="submit"
               disabled={!inputText.trim() || isTyping}
-              className="bg-amber-800 hover:bg-amber-900 disabled:bg-white/20 disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors backdrop-blur-sm flex-shrink-0"
+              className="disabled:bg-white/20 disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors backdrop-blur-sm flex-shrink-0"
+              style={{
+                backgroundColor: !inputText.trim() || isTyping ? undefined : userColor,
+                '--tw-hover-bg': userColor + 'CC'
+              } as React.CSSProperties & { '--tw-hover-bg': string }}
+              onMouseEnter={(e) => {
+                if (!(!inputText.trim() || isTyping)) {
+                  e.currentTarget.style.backgroundColor = userColor + 'CC';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!(!inputText.trim() || isTyping)) {
+                  e.currentTarget.style.backgroundColor = userColor;
+                }
+              }}
             >
               <Send size={16} />
             </button>
