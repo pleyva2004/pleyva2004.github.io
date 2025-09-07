@@ -54,15 +54,19 @@ class Ollama:
 
 def _llm():
     # Try providers in order of preference
-    if os.getenv("OPENAI_API_KEY"):
+    if os.getenv("GEMINI_API_KEY"):
+        print("Using Gemini")
+        return ChatGemini(model="gemini-1.5-flash")
+
+    elif os.getenv("OPENAI_API_KEY"):
         print("Using OpenAI")
         return ChatOpenAI(model="gpt-4o-mini")
     elif os.getenv("ANTHROPIC_API_KEY"):
         print("Using Claude")
         return ChatClaude(model="claude-3-haiku-20240307")
-    elif os.getenv("GEMINI_API_KEY"):
-        print("Using Gemini")
-        return ChatGemini(model="gemini-1.5-flash")
+    else:
+        print("Using Ollama")
+        return Ollama(model="mistral")
     
     # Fallback to local Ollama (pull a model like mistral or llama3)
     print("Using Ollama")

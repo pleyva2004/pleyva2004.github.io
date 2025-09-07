@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Timeline from './components/Timeline';
@@ -27,10 +28,13 @@ function App() {
         isVisible={isNetworkVisible}
         onClose={() => setIsNetworkVisible(false)}
       />
-      <ChatInterface 
-        isVisible={isChatVisible}
-        onClose={() => setIsChatVisible(false)}
-      />
+      <AnimatePresence>
+        {isChatVisible && (
+          <ChatInterface 
+            onClose={() => setIsChatVisible(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

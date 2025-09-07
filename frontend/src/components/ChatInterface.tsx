@@ -11,7 +11,6 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  isVisible: boolean;
   onClose: () => void;
 }
 
@@ -24,7 +23,7 @@ const quickReplies = [
   'What are Pablo\'s goals?'
 ];
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ isVisible, onClose }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -167,17 +166,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isVisible, onClose }) => 
   }, [isDragging, isResizing, dragStart, resizeStart, windowSize.width, windowSize.height]);
 
   // API configuration
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Real API integration
   const sendMessageToAPI = async (message: string): Promise<string> => {
+    console.log("Sending message to API");
+    console.log(message);
+    console.log("--------------------------------")
+    console.log(API_URL)
+    console.log("--------------------------------")
     try {
-      const response = await fetch(`${API_URL}/chat`, {
+      const response = await fetch(`${API_URL}/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ question: message }),
       });
 
       if (!response.ok) {
@@ -185,7 +189,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isVisible, onClose }) => 
       }
 
       const data = await response.json();
-      return data.message || "Sorry, I couldn't process that request.";
+      return data.answer || "Sorry, I couldn't process that request.";
     } catch (error) {
       console.error('API Error:', error);
       return "Sorry, I'm having trouble connecting right now. Please try again.";
@@ -287,8 +291,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isVisible, onClose }) => 
       handleSendMessage(inputText);
     }
   };
-
-  if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-md">
