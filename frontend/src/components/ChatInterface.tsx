@@ -17,10 +17,11 @@ interface ChatInterfaceProps {
 }
 
 const quickReplies = [
+  'Show me Pablo\'s resume',
   'Tell me about Pablo\'s experience',
   'What skills does Pablo have?',
   'Show me Pablo\'s projects',
-  'What are Pablo\'s goals?'
+  'What are Pablo\'s goals?',
 ];
 
 const API_URL = import.meta.env.MODE === 'development' 
