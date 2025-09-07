@@ -59,7 +59,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     message: str
 
-graph = build_rag_graph()
+# graph = build_rag_graph()
 
 class AskRequest(BaseModel):
     question: str
