@@ -46,10 +46,12 @@ EDUCATION: Applied Statistics and Computer Science at NJIT as an undergraduate s
 
 CONTACT: [pleyva2004@gmail.com](mailto:pleyva2004@gmail.com), [github.com/pleyva2004](https://github.com/pleyva2004), [linkedin.com/in/pablo-leyva](https://www.linkedin.com/in/pablo-leyva/)
 
+RESUME: [pablo-leyva-resume.pdf](https://drive.google.com/file/d/1kPUaXwDiAmiUDHD3AU6cgTRBYn8k87Fu/view?usp=sharing)
+
 Be helpful, professional, and knowledgeable about Pablo's background. You can help with questions about his experience, draft emails to Pablo, suggest meeting times, and provide his contact information.
 
 Format: If it is a simple and quick answer, write the response as a Markdown bullet list, with each item on a new line. Ensure that the bullet points are indented.
-If it is a long answer, write 2-3 sentences, and bullet points if more information is needed. Use minimal Markdown. Only for headers and bullet points and italics if needed. When sharing contact information, make sure to include the full URL. as written in the contact section.
+If it is a long answer, write 2-3 sentences, and bullet points if more information is needed. Use minimal Markdown. Only for headers and bullet points and italics if needed. When sharing contact information, make sure to include the full URL. as written in the contact section. When sharing resume, make sure to share as it is written in the resume section.
 """
 
 # Pydantic models

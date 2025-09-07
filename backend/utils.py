@@ -3,8 +3,13 @@ from openai import OpenAI
 from anthropic import Anthropic
 import google.generativeai as genai
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class ChatOpenAI:
     def __init__(self, model: str = "gpt-4o-mini"):
@@ -50,27 +55,46 @@ class Ollama:
         self.model = model
     
     def __call__(self, prompt: str):
-        return "Model stilll not implemented"
+        return "Levrok Labs Model still down for maintenance"
+
+class LevrokLabs:
+    def __init__(self):
+        self.providers = []
+        
+        # Initialize available providers
+        if os.getenv("GOOGLE_API_KEY"):
+            self.providers.append(("Gemini", ChatGemini(model="gemini-1.5-flash")))
+        if os.getenv("ANTHROPIC_API_KEY"):
+            self.providers.append(("Claude", ChatClaude(model="claude-3-5-haiku-latest")))
+        if os.getenv("OPENAI_API_KEY"):
+            self.providers.append(("OpenAI", ChatOpenAI(model="gpt-4o-mini")))
+        
+        # Always add Ollama as final fallback
+        self.providers.append(("Ollama", Ollama(model="mistral")))
+        
+        if not self.providers:
+            raise RuntimeError("No AI providers available")
+    
+    def __call__(self, prompt: str):
+        last_error = None
+        
+        for provider_name, provider in self.providers:
+            try:
+                logger.info(f"Trying {provider_name}...")
+                result = provider(prompt)
+                logger.info(f"Successfully used {provider_name}")
+                return result
+            except Exception as e:
+                logger.warning(f"{provider_name} failed: {str(e)}")
+                last_error = e
+                continue
+        
+        # If all providers fail, raise the last error
+        raise RuntimeError(f"All AI providers failed. Last error: {str(last_error)}")
 
 def _llm():
-    # Try providers in order of preference
-    if os.getenv("GEMINI_API_KEY"):
-        print("Using Gemini")
-        return ChatGemini(model="gemini-1.5-flash")
-
-    elif os.getenv("OPENAI_API_KEY"):
-        print("Using OpenAI")
-        return ChatOpenAI(model="gpt-4o-mini")
-    elif os.getenv("ANTHROPIC_API_KEY"):
-        print("Using Claude")
-        return ChatClaude(model="claude-3-haiku-20240307")
-    else:
-        print("Using Ollama")
-        return Ollama(model="mistral")
     
-    # Fallback to local Ollama (pull a model like mistral or llama3)
-    print("Using Ollama")
-    return Ollama(model="mistral")
+    return LevrokLabs()
 
 if __name__ == "__main__":
     llm = _llm()
