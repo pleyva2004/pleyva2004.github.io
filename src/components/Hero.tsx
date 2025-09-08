@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const Hero: React.FC = () => {
   // Simple typewriter effect
@@ -24,9 +25,11 @@ const Hero: React.FC = () => {
       <div className="text-center max-w-2xl mx-auto">
         {/* Profile Photo - Responsive sizing */}
         <div className="mb-4 sm:mb-6">
-          <img 
-            src="/pablo_leyva_casual.jpg"
+          <Image 
+            src="/pablo_leyva_casual.JPG"
             alt="Profile" 
+            width={320}
+            height={320}
             className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-full mx-auto border-4 border-white/10 shadow-2xl"
           />
         </div>

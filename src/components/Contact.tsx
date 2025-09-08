@@ -58,24 +58,6 @@ const Contact: React.FC = () => {
                   <span>LinkedIn</span>
                 </a>
                 <a 
-                  href="https://discord.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
-                >
-                  <MessageCircle size={20} className="mr-3" />
-                  <span>Discord</span>
-                </a>
-                <a 
-                  href="https://youtube.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
-                >
-                  <Youtube size={20} className="mr-3" />
-                  <span>YouTube</span>
-                </a>
-                <a 
                   href="mailto:pleyva2004@gmail.com"
                   className="flex items-center text-gray-300 hover:text-white transition-colors group"
                 >
