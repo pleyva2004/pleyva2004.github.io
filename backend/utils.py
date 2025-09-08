@@ -64,10 +64,10 @@ class LevrokLabs:
         # Initialize available providers
         if os.getenv("GOOGLE_API_KEY"):
             self.providers.append(("Gemini", ChatGemini(model="gemini-1.5-flash")))
-        if os.getenv("ANTHROPIC_API_KEY"):
-            self.providers.append(("Claude", ChatClaude(model="claude-3-5-haiku-latest")))
         if os.getenv("OPENAI_API_KEY"):
             self.providers.append(("OpenAI", ChatOpenAI(model="gpt-4o-mini")))
+        if os.getenv("ANTHROPIC_API_KEY"):
+            self.providers.append(("Claude", ChatClaude(model="claude-3-5-haiku-latest")))
         
         # Always add Ollama as final fallback
         self.providers.append(("Ollama", Ollama(model="mistral")))

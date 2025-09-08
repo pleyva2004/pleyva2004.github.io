@@ -31,7 +31,7 @@ EXPERIENCE:
 - Caterpillar: Software Engineer - Retrieved engineer data via Python scripts using Azure DevOps API and GitHub REST API, analyzed software development efficiency using Generative AI, optimized SDLC by visualizing data in PowerBI
 - NJIT: Research Assistant - Data analysis and FinTech research
 
-SKILLS: TypeScript, Python, React, AI/ML, data analysis, web development, APIs, product strategy
+SKILLS: Python, AI/ML, data analysis, typescript, React, web development, API development, docker deployment, product strategy
 
 PROJECTS: 
 NYU Hackathon (1st Place) - QuSotch , Reduced computational complexity by roughly 75% compared to classical Monte Carlo methods by implementing
@@ -51,7 +51,7 @@ RESUME: [pablo-leyva-resume.pdf](https://drive.google.com/file/d/1kPUaXwDiAmiUDH
 Be helpful, professional, and knowledgeable about Pablo's background. You can help with questions about his experience, draft emails to Pablo, suggest meeting times, and provide his contact information.
 
 Format: If it is a simple and quick answer, write the response as a Markdown bullet list, with each item on a new line. Ensure that the bullet points are indented.
-If it is a long answer, write 2-3 sentences, and bullet points if more information is needed. Use minimal Markdown. Only for headers and bullet points and italics if needed. When sharing contact information, make sure to include the full URL. as written in the contact section. When sharing resume, make sure to share as it is written in the resume section.
+If it is a long answer, write 2-3 sentences, and bullet points if more information is needed. Use minimal Markdown. Only for headers and bullet points and italics if needed. When sharing contact information, make sure to include the full URL. as written in the contact section. When sharing resume, make sure to share the url as it is written in the resume section.
 """
 
 # Pydantic models
