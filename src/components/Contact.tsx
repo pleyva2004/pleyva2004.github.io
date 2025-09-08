@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Github, Linkedin, MessageCircle, Youtube, Mail, MapPin } from 'lucide-react';
+import { Github, Linkedin, Mail, MapPin } from 'lucide-react';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    subject: '',
     email: '',
     message: ''
   });
@@ -18,8 +18,17 @@ const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
+    
+    // Create mailto URL with form data
+    const mailtoUrl = `mailto:pleyva2004@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
+      `${formData.message}`
+    )}`;
+    
+    // Open user's email client
+    window.location.href = mailtoUrl;
+    
+    // Reset form after sending
+    setFormData({ subject: '', email: '', message: '' });
   };
 
   return (
@@ -43,7 +52,7 @@ const Contact: React.FC = () => {
                   href="https://github.com/pleyva2004" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-c nter text-gray-300 hover:text-white transition-colors group"
+                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
                 >
                   <Github size={20} className="mr-3" />
                   <span>GitHub</span>
@@ -81,26 +90,27 @@ const Contact: React.FC = () => {
           <div>
             <h3 className="text-2xl font-semibold text-white mb-6">Send a Message</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name Input */}
+              {/* Subject Input */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                  Name
+                <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
+                  Subject
                 </label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
+                  id="subject"
+                  name="subject"
+                  value={formData.subject}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors"
-                  placeholder="Your name"
+                  placeholder="Subject line"
+                  required
                 />
               </div>
 
               {/* Email Input */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Email
+                  Your Email
                 </label>
                 <input
                   type="email"
@@ -110,6 +120,7 @@ const Contact: React.FC = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors"
                   placeholder="your@email.com"
+                  required
                 />
               </div>
 
@@ -126,6 +137,7 @@ const Contact: React.FC = () => {
                   rows={5}
                   className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors resize-none"
                   placeholder="Your message..."
+                  required
                 />
               </div>
 
@@ -134,7 +146,7 @@ const Contact: React.FC = () => {
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-dark-bg"
               >
-                Send Message
+                Open Email Client
               </button>
             </form>
           </div>

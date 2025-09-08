@@ -2,16 +2,26 @@
   "name": "personal-site",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://pleyva2004.github.io",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d out --dotfiles"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.61.0",
+    "@emailjs/browser": "^4.4.1",
+    "@google/generative-ai": "^0.24.1",
+    "@types/nodemailer": "^7.0.1",
     "framer-motion": "^12.23.12",
+    "gh-pages": "^6.3.0",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
+    "nodemailer": "^7.0.6",
+    "openai": "^5.19.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",

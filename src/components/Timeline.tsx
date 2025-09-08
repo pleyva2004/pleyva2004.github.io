@@ -15,7 +15,7 @@ const Timeline: React.FC = () => {
         <div className="relative">
           {/* Vertical Line - Hidden on mobile, visible on desktop */}
           <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-0.5 bg-gray-600" 
-               style={{ height: `${timelineData.length * 18 + 2}rem` }}>
+               style={{ height: `${timelineData.length * 24}rem` }}>
           </div>
 
           {/* Mobile Timeline Line - Left aligned */}

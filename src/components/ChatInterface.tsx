@@ -26,9 +26,8 @@ const quickReplies = [
   'What are Pablo\'s goals?',
 ];
 
-const API_URL = process.env.MODE === 'development' 
-  ? "http://localhost:8000" 
-  : process.env.VITE_API_URL;
+// We'll use Next.js API routes instead of direct backend calls
+const API_URL = "/api";
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([
@@ -174,7 +173,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
 
   const sendMessageToAPI = async (message: string): Promise<string> => {
-    if (process.env.MODE === 'development') {
+    if (process.env.NODE_ENV === 'development') {
       console.log("Sending message to API");
       console.log(message);
       console.log("--------------------------------")

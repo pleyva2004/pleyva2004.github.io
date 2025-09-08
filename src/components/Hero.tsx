@@ -36,7 +36,7 @@ const Hero: React.FC = () => {
 
         {/* Quote Card - Responsive padding and text size */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-xl">
-          <blockquote className="text-gray-800 text-sm sm:text-base italic leading-relaxed">
+          <blockquote className="text-gray-700 text-sm sm:text-base italic leading-relaxed">
             {text}
             {text.length < fullText.length && <span className="animate-pulse ml-1">|</span>}
           </blockquote>
