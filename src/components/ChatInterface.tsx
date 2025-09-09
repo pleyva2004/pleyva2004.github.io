@@ -258,6 +258,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     try {
 
 
+      // SHORT TERM MEMORY
+      // Get the last 3 messages
       const tempMessages = messages.slice(-3);
 
       const history = tempMessages.map(message => ({
