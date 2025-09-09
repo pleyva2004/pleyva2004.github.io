@@ -258,7 +258,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     try {
 
 
-      const history = messages.map(message => ({
+      const tempMessages = messages.slice(-3);
+
+      const history = tempMessages.map(message => ({
         text: message.text,
         sender: message.sender
       }));
