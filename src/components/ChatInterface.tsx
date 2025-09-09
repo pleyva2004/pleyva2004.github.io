@@ -11,7 +11,6 @@ interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
-  timestamp: Date;
 }
 
 interface ChatInterfaceProps {
@@ -35,7 +34,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       id: '1',
       text: 'Hey, I am an AI Agent from Levrok Labs. Please enter \\help for usage tips',
       sender: 'bot',
-      timestamp: new Date()
     }
   ]);
   const [inputText, setInputText] = useState('');
@@ -172,14 +170,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   }, [isDragging, isResizing, dragStart, resizeStart, windowSize.width, windowSize.height]);
 
 
-  const sendMessageToAPI = async (message: string): Promise<string> => {
-    if (process.env.NODE_ENV === 'development') {
+  const sendMessageToAPI = async (body: any): Promise<string> => {
+    if (process.env.MODE === 'development') {
       console.log("Sending message to API");
-      console.log(message);
+      console.log(body.question);
       console.log("--------------------------------")
-      console.log(API_URL)
-      console.log("--------------------------------")
+      console.log(API_URL)  
     }
+
+
+
 
     try {
       const response = await fetch(`${API_URL}/ask`, {
@@ -187,7 +187,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ question: message }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -210,8 +210,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       const helpText = `## SETTINGS\n- Change text color: Type a color name\n- Resize window: Drag bottom-right corner\n- Move window: Drag header\n\n## FUNCTIONS\n- Ask about Pablo's experience\n- Inquire about technical skills\n- Learn about projects\n\n## ACTIONS\n- Write an email to Pablo\n- Set up a meeting\n- Provide contact information`;
       
       setMessages(prev => [...prev, 
-        { id: Date.now().toString(), text, sender: 'user', timestamp: new Date() },
-        { id: (Date.now() + 1).toString(), text: helpText, sender: 'bot', timestamp: new Date() }
+        { id: Date.now().toString(), text, sender: 'user' },
+        { id: (Date.now() + 1).toString(), text: helpText, sender: 'bot' }
       ]);
       setInputText('');
       return;
@@ -230,7 +230,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         id: Date.now().toString(),
         text: text,
         sender: 'user',
-        timestamp: new Date()
       };
       setMessages(prev => [...prev, userMessage]);
       
@@ -240,7 +239,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         id: (Date.now() + 1).toString(),
         text: `Great! I've set your message color to ${colorName}. Your messages will now appear in this color for the rest of our conversation!`,
         sender: 'bot',
-        timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
       setInputText('');
@@ -251,7 +249,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       id: Date.now().toString(),
       text: text,
       sender: 'user',
-      timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -259,13 +256,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     setIsTyping(true);
 
     try {
-      const response = await sendMessageToAPI(text);
+
+
+      const history = messages.map(message => ({
+        text: message.text,
+        sender: message.sender
+      }));
+      
+      
+      const body = {
+        question: text,
+        history: history
+      } 
+      
+      const response = await sendMessageToAPI(body);
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: response,
         sender: 'bot',
-        timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -274,7 +283,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         id: (Date.now() + 1).toString(),
         text: 'Sorry, I encountered an error. Please try again.',
         sender: 'bot',
-        timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {

@@ -5,7 +5,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Pablo's information for the system prompt
 const PABLO_INFO = `
-You are Pablo Leyva's AI assistant. Here's information about Pablo:
+You are Pablo Leyva's AI assistant. You answer questions on Pablo's background, experience, skills, projects, education, and contact information. 
+
+Here's information about Pablo:
 
 EXPERIENCE:
 - Apple: AI Product & Strategy Intern - Led team of 3 interns to build MVP for Agentic Payment flow, prototyped agentic workflows with LLM-based product recommendations and Apple Pay checkout using TypeScript and Model Context Protocol
@@ -13,7 +15,7 @@ EXPERIENCE:
 - Caterpillar: Software Engineer - Retrieved engineer data via Python scripts using Azure DevOps API and GitHub REST API, analyzed software development efficiency using Generative AI, optimized SDLC by visualizing data in PowerBI
 - NJIT: Research Assistant - Data analysis and FinTech research
 
-SKILLS: TypeScript, Python, React, AI/ML, data analysis, web development, APIs, product strategy
+SKILLS: Python, AI/ML, Java, TypeScript, React, R, data analysis, web development, APIs, product strategy
 
 PROJECTS: 
 NYU Hackathon (1st Place) - QuSotch , Reduced computational complexity by roughly 75% compared to classical Monte Carlo methods by implementing
@@ -33,7 +35,7 @@ RESUME: [pablo-leyva-resume.pdf](https://drive.google.com/file/d/1kPUaXwDiAmiUDH
 Be helpful, professional, and knowledgeable about Pablo's background. You can help with questions about his experience, draft emails to Pablo, suggest meeting times, and provide his contact information.
 
 Format: If it is a simple and quick answer, write the response as a Markdown bullet list, with each item on a new line. Ensure that the bullet points are indented.
-If it is a long answer, write 2-3 sentences, and bullet points if more information is needed. Use minimal Markdown. Only for headers and bullet points and italics if needed. When sharing contact information, make sure to include the full URL. as written in the contact section. When sharing resume, make sure to share as it is written in the resume section.
+If it is a long answer, write 2-3 sentences, and bullet points if more information is needed. Use minimal Markdown. Only for headers and bullet points and italics if needed. When sharing contact information, make sure to include the full URL. as written in the contact section.
 `;
 
 // AI Provider classes
@@ -104,6 +106,7 @@ class OllamaFallback {
 
 class LevrokLabs {
   private providers: Array<{ name: string; provider: ChatOpenAI | ChatGemini | ChatClaude | OllamaFallback }> = [];
+  private readonly TIMEOUT_MS = 10000; // 10 seconds
 
   constructor() {
     // Initialize available providers
@@ -113,16 +116,16 @@ class LevrokLabs {
         provider: new ChatGemini("gemini-1.5-flash") 
       });
     }
-    if (process.env.OPENAI_API_KEY) {
-      this.providers.push({ 
-        name: "OpenAI", 
-        provider: new ChatOpenAI("gpt-4o-mini") 
-      });
-    }
     if (process.env.ANTHROPIC_API_KEY) {
       this.providers.push({ 
         name: "Claude", 
         provider: new ChatClaude("claude-3-5-haiku-20241022") 
+      });
+    }
+    if (process.env.OPENAI_API_KEY) {
+      this.providers.push({ 
+        name: "OpenAI", 
+        provider: new ChatOpenAI("gpt-4o-mini") 
       });
     }
 
@@ -138,17 +141,31 @@ class LevrokLabs {
     }
   }
 
+  private async callWithTimeout(provider: ChatOpenAI | ChatGemini | ChatClaude | OllamaFallback, prompt: string): Promise<string> {
+    return Promise.race([
+      provider.call(prompt),
+      new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout after 10 seconds')), this.TIMEOUT_MS)
+      )
+    ]);
+  }
+
   async call(prompt: string): Promise<string> {
     let lastError: Error | null = null;
 
     for (const { name, provider } of this.providers) {
       try {
         console.log(`Trying ${name}...`);
-        const result = await provider.call(prompt);
+        const result = await this.callWithTimeout(provider, prompt);
         console.log(`Successfully used ${name}`);
         return result;
       } catch (error) {
-        console.warn(`${name} failed:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        if (errorMessage.includes('timeout')) {
+          console.warn(`${name} timed out after 10 seconds, switching to next provider`);
+        } else {
+          console.warn(`${name} failed:`, error);
+        }
         lastError = error as Error;
         continue;
       }
@@ -162,7 +179,7 @@ class LevrokLabs {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { question } = body;
+    const { question, history } = body;
 
     if (!question) {
       return NextResponse.json(
@@ -177,11 +194,13 @@ export async function POST(request: NextRequest) {
     console.log("--------------------------------");
 
     const prompt = `
-    You are Pablo Leyva's AI assistant. Here's information about Pablo:
+    You are Pablo Leyva's AI assistaxnt. Here's information about Pablo:
 
     ${PABLO_INFO}
 
     Question: ${question}
+
+    History: ${history}
 
     Answer:
     `;
@@ -189,6 +208,9 @@ export async function POST(request: NextRequest) {
     const llmClient = new LevrokLabs();
     const answer = await llmClient.call(prompt);
 
+    console.log("--------------------------------");
+    console.log(history);
+    console.log("--------------------------------");
     console.log(answer);
     console.log("--------------------------------");
 
