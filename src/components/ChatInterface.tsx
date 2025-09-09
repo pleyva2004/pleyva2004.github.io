@@ -28,6 +28,12 @@ const quickReplies = [
 // We'll use Next.js API routes instead of direct backend calls
 const API_URL = "/api";
 
+// Add proper type for the API body
+interface APIRequestBody {
+  question: string;
+  conversationHistory?: Message[];
+}
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -123,29 +129,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     });
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      const newX = Math.max(0, Math.min(100 - windowSize.width, (e.clientX - dragStart.x) / window.innerWidth * 100));
-      const newY = Math.max(0, Math.min(100 - windowSize.height, (e.clientY - dragStart.y) / window.innerHeight * 100));
-      setWindowPosition({ x: newX, y: newY });
-    }
-    
-    if (isResizing) {
-      const deltaX = (e.clientX - resizeStart.x) / window.innerWidth * 100;
-      const deltaY = (e.clientY - resizeStart.y) / window.innerHeight * 100;
-      
-      const newWidth = Math.max(30, Math.min(90, resizeStart.width + deltaX));
-      const newHeight = Math.max(40, Math.min(90, resizeStart.height + deltaY));
-      
-      setWindowSize({ width: newWidth, height: newHeight });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    setIsResizing(false);
-  };
-
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsResizing(true);
@@ -159,6 +142,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
   // Add global event listeners
   useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        const newX = Math.max(0, Math.min(100 - windowSize.width, (e.clientX - dragStart.x) / window.innerWidth * 100));
+        const newY = Math.max(0, Math.min(100 - windowSize.height, (e.clientY - dragStart.y) / window.innerHeight * 100));
+        setWindowPosition({ x: newX, y: newY });
+      }
+      
+      if (isResizing) {
+        const newWidth = Math.max(20, Math.min(80, (e.clientX - resizeStart.x) / window.innerWidth * 100 + windowSize.width));
+        const newHeight = Math.max(20, Math.min(80, (e.clientY - resizeStart.y) / window.innerHeight * 100 + windowSize.height));
+        setWindowSize({ width: newWidth, height: newHeight });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setIsResizing(false);
+    };
+
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -170,7 +172,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   }, [isDragging, isResizing, dragStart, resizeStart, windowSize.width, windowSize.height]);
 
 
-  const sendMessageToAPI = async (body: any): Promise<string> => {
+  const sendMessageToAPI = async (body: APIRequestBody): Promise<string> => {
     if (process.env.MODE === 'development') {
       console.log("Sending message to API");
       console.log(body.question);
@@ -282,7 +284,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       };
 
       setMessages(prev => [...prev, botMessage]);
-    } catch (error) {
+    } catch {  // Remove unused error parameter
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: 'Sorry, I encountered an error. Please try again.',
@@ -371,18 +373,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
-                            h1: ({node, ...props}) => <h1 className="text-lg font-bold mb-3 mt-2" {...props} />,
-                            h2: ({node, ...props}) => <h2 className="text-base font-bold mb-2 mt-3" {...props} />,
-                            h3: ({node, ...props}) => <h3 className="text-sm font-semibold mb-2 mt-2" {...props} />,
-                            ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 mb-3 ml-2" {...props} />,
-                            ol: ({node, ...props}) => <ol className="list-decimal list-inside space-y-1 mb-3 ml-2" {...props} />,
-                            li: ({node, ...props}) => <li className="ml-2" {...props} />,
-                            p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                            strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
-                            em: ({node, ...props}) => <em className="italic" {...props} />,
-                            code: ({node, ...props}) => <code className="bg-black/20 px-1 py-0.5 rounded text-xs font-mono" {...props} />,
-                            pre: ({node, ...props}) => <pre className="bg-black/20 p-2 rounded mt-2 mb-2 text-xs font-mono overflow-x-auto" {...props} />,
-                            a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline" />,
+                            h1: (props) => <h1 className="text-lg font-bold mb-3 mt-2" {...props} />,
+                            h2: (props) => <h2 className="text-base font-bold mb-2 mt-3" {...props} />,
+                            h3: (props) => <h3 className="text-sm font-semibold mb-2 mt-2" {...props} />,
+                            ul: (props) => <ul className="list-disc list-inside space-y-1 mb-3 ml-2" {...props} />,
+                            ol: (props) => <ol className="list-decimal list-inside space-y-1 mb-3 ml-2" {...props} />,
+                            li: (props) => <li className="ml-2" {...props} />,
+                            p: (props) => <p className="mb-2 last:mb-0" {...props} />,
+                            strong: (props) => <strong className="font-semibold" {...props} />,
+                            em: (props) => <em className="italic" {...props} />,
+                            code: (props) => <code className="bg-black/20 px-1 py-0.5 rounded text-xs font-mono" {...props} />,
+                            pre: (props) => <pre className="bg-black/20 p-2 rounded mt-2 mb-2 text-xs font-mono overflow-x-auto" {...props} />,
+                            a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline" />,
                           }}  
                         >
                           {message.text}

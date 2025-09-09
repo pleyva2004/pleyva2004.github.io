@@ -100,6 +100,10 @@ class ChatGemini {
 
 class OllamaFallback {
   async call(_prompt: string): Promise<string> {
+    console.log("OllamaFallback called");
+    console.log("--------------------------------");
+    console.log(_prompt);
+    console.log("--------------------------------");
     return "Levrok Labs Model still down for maintenance";
   }
 }
