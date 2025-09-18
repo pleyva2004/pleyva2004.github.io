@@ -315,10 +315,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-md">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl flex flex-col shadow-2xl absolute select-none"
+        layoutId="chat-container"
+        initial={{
+          opacity: 1,
+          borderRadius: "9999px"
+        }}
+        animate={{
+          opacity: 1,
+          borderRadius: "12px"
+        }}
+        exit={{
+          opacity: 0,
+          borderRadius: "9999px"
+        }}
+        transition={{
+          duration: 0.4,
+          ease: "easeInOut"
+        }}
+        className="bg-white/5 backdrop-blur-xl border border-white/10 flex flex-col shadow-2xl absolute select-none"
         style={{
           left: `${windowPosition.x}vw`,
           top: `${windowPosition.y}vh`,
@@ -328,7 +342,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         }}
       >
         {/* Header */}
-        <div 
+        <div
           className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5 backdrop-blur-sm cursor-grab active:cursor-grabbing"
           onMouseDown={handleMouseDown}
         >
@@ -345,7 +359,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div
+          className="flex-1 overflow-y-auto p-4 space-y-4"
+        >
           <AnimatePresence>
             {messages.map((message) => {
               const isUser = message.sender === 'user';
@@ -421,7 +437,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
         {/* Quick Replies */}
         {messages.length === 1 && (
-          <div className="px-4 py-2">
+          <div
+            className="px-4 py-2"
+          >
             <div className="flex flex-wrap gap-2">
               {quickReplies.map((reply, index) => (
                 <button
@@ -437,7 +455,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         )}
 
         {/* Input */}
-        <form onSubmit={handleSubmit} className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-sm"
+        >
           <div className="flex items-center space-x-2">
             <div className="flex-1 relative">
               <textarea
