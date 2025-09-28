@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "export": "next build",
+    "deploy": "gh-pages -d out",
+    "deploy-gh": "npm run export && npm run deploy"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.61.0",
