@@ -317,20 +317,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       <motion.div
         layoutId="chat-container"
         initial={{
-          opacity: 1,
-          borderRadius: "9999px"
+          opacity: 0
         }}
         animate={{
-          opacity: 1,
-          borderRadius: "12px"
+          opacity: 1
         }}
         exit={{
-          opacity: 0,
-          borderRadius: "9999px"
+          opacity: 0
         }}
         transition={{
           duration: 0.4,
-          ease: "easeInOut"
         }}
         className="bg-white/5 backdrop-blur-xl border border-white/10 flex flex-col shadow-2xl absolute select-none"
         style={{

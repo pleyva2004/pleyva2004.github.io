@@ -52,14 +52,18 @@ const Hero: React.FC = () => {
           className="mt-8 sm:mt-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
+          transition={{ duration: 0.6, delay: 0.8}}
         >
           {!isChatExpanded && (
-            <motion.div
-              layoutId="chat-container"
-              className="bg-white/5 backdrop-blur-xl rounded-full px-6 py-4 shadow-xl cursor-pointer hover:bg-white/10 transition-all duration-200 group border border-white/10"
-              onClick={() => setIsChatExpanded(true)}
-            >
+              <motion.div
+                layoutId="chat-container"
+                className="bg-white/5 backdrop-blur-xl rounded-xl px-6 py-4 shadow-xl cursor-pointer hover:bg-white/10 transition-all duration-200 group border border-white/10"
+                style={{ borderRadius: "12px" }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+                onClick={() => setIsChatExpanded(true)}
+              >
               <div className="flex items-center justify-between space-x-4">
                 {/* Left side - Plus icon and text */}
                 <div className="flex items-center space-x-3">
