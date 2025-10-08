@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { FiDownload, FiZoomIn, FiZoomOut, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
@@ -20,6 +20,11 @@ export default function PDFViewer({ pdfUrl, title }: PDFViewerProps) {
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [isClient, setIsClient] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -27,7 +32,7 @@ export default function PDFViewer({ pdfUrl, title }: PDFViewerProps) {
   }
 
   function onDocumentLoadError(error: Error) {
-    console.error('Error loading PDF:', error);
+    console.error(title, 'Error loading PDF:', error);
     setError('Failed to load PDF. Please try downloading it instead.');
     setLoading(false);
   }
@@ -41,6 +46,20 @@ export default function PDFViewer({ pdfUrl, title }: PDFViewerProps) {
 
   const zoomIn = () => setScale((prev) => Math.min(prev + 0.2, 2.0));
   const zoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
+
+  // Show loading state until component is mounted on client
+  if (!isClient) {
+    return (
+      <div className="flex flex-col h-full bg-dark-card border border-accent-blue/20 rounded-lg overflow-hidden">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading PDF Viewer...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-dark-card border border-accent-blue/20 rounded-lg overflow-hidden">

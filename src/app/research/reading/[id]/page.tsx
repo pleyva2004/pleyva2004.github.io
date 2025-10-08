@@ -19,6 +19,30 @@ export default function ReadingViewPage() {
 
   const paper = readingList.find((p) => p.id === id);
 
+  // Load notes content for context
+  useEffect(() => {
+    if (paper?.notesFileName) {
+      const notesUrl = `/research/notes/${paper.notesFileName}`;
+      fetch(notesUrl)
+        .then((response) => response.text())
+        .then((text) => setNotesContent(text))
+        .catch((err) => console.error('Error loading notes for context:', err));
+    }
+  }, [paper?.notesFileName]);
+
+  // Update chat context whenever paper or notes change
+  useEffect(() => {
+    if (paper) {
+      setPageContext({
+        type: 'reading-page',
+        data: {
+          paper: paper,
+          notes: notesContent,
+        },
+      });
+    }
+  }, [paper, notesContent, setPageContext]);
+
   if (!paper) {
     return (
       <div className="h-screen bg-dark-bg text-white flex items-center justify-center">
@@ -39,29 +63,6 @@ export default function ReadingViewPage() {
 
   const pdfUrl = `/research/papers/${paper.pdfFileName}`;
   const notesUrl = paper.notesFileName ? `/research/notes/${paper.notesFileName}` : '';
-
-  // Load notes content for context
-  useEffect(() => {
-    if (notesUrl) {
-      fetch(notesUrl)
-        .then((response) => response.text())
-        .then((text) => setNotesContent(text))
-        .catch((err) => console.error('Error loading notes for context:', err));
-    }
-  }, [notesUrl]);
-
-  // Update chat context whenever paper or notes change
-  useEffect(() => {
-    if (paper) {
-      setPageContext({
-        type: 'reading-page',
-        data: {
-          paper: paper,
-          notes: notesContent,
-        },
-      });
-    }
-  }, [paper, notesContent, setPageContext]);
 
   return (
     <div className="h-screen bg-dark-bg text-white">
@@ -129,7 +130,6 @@ export default function ReadingViewPage() {
           </motion.div>
         </div>
       </main>
-
 
       <ChatInput />
     </div>

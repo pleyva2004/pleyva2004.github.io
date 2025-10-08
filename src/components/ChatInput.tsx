@@ -2,6 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useChatContext } from '@/contexts/ChatContext';
 
+// Type for webkit CSS properties
+interface WebkitCSSStyleDeclaration extends CSSStyleDeclaration {
+  webkitUserSelect: string;
+  webkitTouchCallout: string;
+  webkitTapHighlightColor: string;
+}
+
 interface Message {
   id: number;
   text: string;
@@ -43,19 +50,21 @@ const ChatInput: React.FC = () => {
     const handleEnd = () => {
       setIsDragging(false);
       // Re-enable text selection - Enhanced for mobile
-      document.body.style.userSelect = '';
-      (document.body.style as any).webkitUserSelect = '';
-      (document.body.style as any).webkitTouchCallout = '';
-      (document.body.style as any).webkitTapHighlightColor = '';
+      const bodyStyle = document.body.style as WebkitCSSStyleDeclaration;
+      bodyStyle.userSelect = '';
+      bodyStyle.webkitUserSelect = '';
+      bodyStyle.webkitTouchCallout = '';
+      bodyStyle.webkitTapHighlightColor = '';
       document.onselectstart = null;
     };
 
     if (isDragging) {
       // Disable text selection during drag - Enhanced for mobile
-      document.body.style.userSelect = 'none';
-      (document.body.style as any).webkitUserSelect = 'none';
-      (document.body.style as any).webkitTouchCallout = 'none';
-      (document.body.style as any).webkitTapHighlightColor = 'transparent';
+      const bodyStyle = document.body.style as WebkitCSSStyleDeclaration;
+      bodyStyle.userSelect = 'none';
+      bodyStyle.webkitUserSelect = 'none';
+      bodyStyle.webkitTouchCallout = 'none';
+      bodyStyle.webkitTapHighlightColor = 'transparent';
       document.onselectstart = () => false;
       
       document.addEventListener('mousemove', handleMouseMove);
@@ -70,10 +79,11 @@ const ChatInput: React.FC = () => {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleEnd);
       // Ensure text selection is re-enabled on cleanup - Enhanced for mobile
-      document.body.style.userSelect = '';
-      (document.body.style as any).webkitUserSelect = '';
-      (document.body.style as any).webkitTouchCallout = '';
-      (document.body.style as any).webkitTapHighlightColor = '';
+      const bodyStyle = document.body.style as WebkitCSSStyleDeclaration;
+      bodyStyle.userSelect = '';
+      bodyStyle.webkitUserSelect = '';
+      bodyStyle.webkitTouchCallout = '';
+      bodyStyle.webkitTapHighlightColor = '';
       document.onselectstart = null;
     };
   }, [isDragging]);
@@ -147,7 +157,7 @@ const ChatInput: React.FC = () => {
         };
         setMessages(prev => [...prev, aiMessage]);
         setIsLoading(false);
-      } catch (error) {
+      } catch {
         const errorMessage: Message = {
           id: Date.now() + 1,
           text: "Sorry, I'm having trouble connecting right now. Please try again.",
@@ -179,7 +189,71 @@ const ChatInput: React.FC = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as any);
+      // Trigger submit logic directly
+      if (message.trim()) {
+        // Add user message
+        const userMessage: Message = {
+          id: Date.now(),
+          text: message.trim(),
+          isUser: true,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, userMessage]);
+        setMessage('');
+        setIsLoading(true);
+
+        // Get AI response
+        try {
+          const tempMessages = messages.slice(-3);
+          const history = tempMessages.map(message => ({
+            text: message.text,
+            sender: message.isUser ? 'user' : 'bot'
+          }));
+            
+          const body = {
+            question: message.trim(),
+            context: pageContext,
+            history: history
+          }
+
+          fetch('/api/ask', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          }).then(async (response) => {
+            const data = await response.json();
+            const aiMessage: Message = {
+              id: Date.now() + 1,
+              text: data.message || "Sorry, I couldn't process that request.",
+              isUser: false,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, aiMessage]);
+            setIsLoading(false);
+          }).catch(() => {
+            const errorMessage: Message = {
+              id: Date.now() + 1,
+              text: "Sorry, I'm having trouble connecting right now. Please try again.",
+              isUser: false,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMessage]);
+            setIsLoading(false);
+          });
+        } catch {
+          const errorMessage: Message = {
+            id: Date.now() + 1,
+            text: "Sorry, I'm having trouble connecting right now. Please try again.",
+            isUser: false,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          setIsLoading(false);
+        }
+      }
     }
   };
 
@@ -236,7 +310,7 @@ const ChatInput: React.FC = () => {
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4" style={{ height: 'calc(100% - 64px)' }}>
               {messages.length === 0 && !isLoading ? (
                 <div className="text-center text-gray-400 py-8">
-                  <p className="text-sm">Ask about Pablo's research</p>
+                  <p className="text-sm">Ask about Pablo&apos;s research</p>
                 </div>
               ) : (
                 <>
@@ -255,10 +329,10 @@ const ChatInput: React.FC = () => {
                         <div className="text-sm">
                           <ReactMarkdown
                             components={{
-                              ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 mb-2" {...props} />,
-                              ol: ({node, ...props}) => <ol className="list-decimal list-inside space-y-1 mb-2" {...props} />,
-                              li: ({node, ...props}) => <li className="ml-0" {...props} />,
-                              p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />
+                              ul: ({ ...props }) => <ul className="list-disc list-inside space-y-1 mb-2" {...props} />,
+                              ol: ({ ...props }) => <ol className="list-decimal list-inside space-y-1 mb-2" {...props} />,
+                              li: ({ ...props }) => <li className="ml-0" {...props} />,
+                              p: ({ ...props }) => <p className="mb-2 last:mb-0" {...props} />
                             }}
                           >
                             {msg.text}

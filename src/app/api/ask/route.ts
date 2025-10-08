@@ -90,10 +90,10 @@ export async function POST(request: NextRequest) {
             Current filter: ${context.data.currentFilter}
 
             Available papers:
-            ${context.data.papers?.map((p: any) => `- ${p.title} (${p.status}): ${p.description}`).join('\n') || ''}
+            ${context.data.papers?.map((p: { title: string; status: string; abstract: string }) => `- ${p.title} (${p.status}): ${p.abstract}`).join('\n') || ''}
 
             Reading list:
-            ${context.data.readingList?.map((p: any) => `- ${p.title} by ${p.authors} (${p.year})`).join('\n') || ''}
+            ${context.data.readingList?.map((p: { title: string; authors: string; year: string }) => `- ${p.title} by ${p.authors} (${p.year})`).join('\n') || ''}
 
             Only answer questions about the research content visible on this page.
             `;
@@ -106,11 +106,12 @@ export async function POST(request: NextRequest) {
 
               Title: ${paper?.title || ''}
               Status: ${paper?.status || ''}
-              Description: ${paper?.description || ''}
+              Author: ${paper?.author || ''}
+              Institution: ${paper?.institution || ''}
+              Date: ${paper?.date || ''}
               Abstract: ${paper?.abstract || ''}
-              ${paper?.keyFindings ? `Key Findings:\n${paper.keyFindings.map((f: string) => `- ${f}`).join('\n')}` : ''}
-              ${paper?.technologies ? `Technologies: ${paper.technologies.join(', ')}` : ''}
-              ${paper?.timeline ? `Timeline: ${paper.timeline}` : ''}
+              ${paper?.sections?.objectives ? `Objectives:\n${paper.sections.objectives.map((obj: string) => `- ${obj}`).join('\n')}` : ''}
+              ${paper?.sections?.significance?.innovations ? `Key Innovations:\n${paper.sections.significance.innovations.map((innovation: string) => `- ${innovation}`).join('\n')}` : ''}
 
               Only answer questions about this specific research paper. If asked about other topics, politely redirect to the current paper.
               `;
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
             Title: ${readingPaper?.title || ''}
             Authors: ${readingPaper?.authors || ''}
             Year: ${readingPaper?.year || ''}
-            ${readingPaper?.abstract ? `Abstract: ${readingPaper.abstract}` : ''}
+            Category: ${readingPaper?.category || ''}
 
             ${context.data.notes ? `Pablo's Notes:\n${context.data.notes}` : 'No notes available yet.'}
 

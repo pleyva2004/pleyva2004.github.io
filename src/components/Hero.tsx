@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import ChatInterface from './ChatInterface';
-import { MessageCircle } from 'lucide-react';
 
 const Hero: React.FC = () => {
   // Simple typewriter effect

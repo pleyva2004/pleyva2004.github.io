@@ -2,25 +2,70 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
+interface Paper {
+  id: string;
+  title: string;
+  author: string;
+  date: string;
+  institution: string;
+  status: 'ongoing' | 'completed';
+  pdfFileName?: string;
+  abstract: string;
+  sections: {
+    introduction: string;
+    objectives: string[];
+    significance: {
+      content: string;
+      innovations: string[];
+    };
+    methodology: {
+      [key: string]: string[];
+    };
+    expectedResults: {
+      outcomes: string[];
+      challenges: string[];
+      mitigation: string;
+    };
+    timeline: {
+      phase: string;
+      description: string;
+    }[];
+    references: {
+      title: string;
+      url: string;
+    }[];
+  };
+}
+
+interface ReadingPaper {
+  id: string;
+  title: string;
+  authors: string;
+  year: string;
+  pdfFileName: string;
+  notesFileName?: string;
+  category: 'favorites' | 'read';
+}
+
 export type PageContextType =
   | {
       type: 'research-list';
       data: {
-        papers: any[];
-        readingList: any[];
+        papers: Paper[];
+        readingList: ReadingPaper[];
         currentFilter: string;
       };
     }
   | {
       type: 'research-detail';
       data: {
-        paper: any;
+        paper: Paper;
       };
     }
   | {
       type: 'reading-page';
       data: {
-        paper: any;
+        paper: ReadingPaper;
         notes: string;
         currentPage?: number;
       };

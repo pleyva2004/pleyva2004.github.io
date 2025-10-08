@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { FiArrowLeft } from 'react-icons/fi';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';

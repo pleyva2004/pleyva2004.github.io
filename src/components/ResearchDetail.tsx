@@ -20,7 +20,7 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     const maxWidth = pageWidth - 2 * margin;
     let yPos = margin;
 
-    const addText = (text: string, fontSize: number, isBold: boolean = false, color: [number, number, number] = [0, 0, 0]) => {
+    const addText = (text: string, fontSize: number, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineSpacing: number = 0.7) => {
       doc.setFontSize(fontSize);
       doc.setFont('helvetica', isBold ? 'bold' : 'normal');
       doc.setTextColor(color[0], color[1], color[2]);
@@ -32,9 +32,9 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
           yPos = margin;
         }
         doc.text(line, margin, yPos);
-        yPos += fontSize * 0.5;
+        yPos += fontSize * lineSpacing;
       });
-      yPos += 5;
+      yPos += fontSize * 0.3; // Add paragraph spacing
     };
 
     const addSpacing = (space: number) => {
@@ -48,18 +48,12 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     // Title
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(0, 102, 204);
     const title = doc.splitTextToSize(paper.title, maxWidth);
     title.forEach((line: string) => {
-      if (yPos > pageHeight - margin) {
-        doc.addPage();
-        yPos = margin;
-      }
       doc.text(line, margin, yPos);
-      yPos += 18 * 0.5; // Use proper line height
+      yPos += 10;
     });
-    yPos += 5; // Add spacing after title
-    
     addSpacing(10);
 
     // Author info
@@ -70,20 +64,19 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     yPos += 6;
     doc.text(paper.date, margin, yPos);
     yPos += 6;
+    doc.text('Undergraduate Researcher - Applied Statistics and Computer Science', margin, yPos);
+    yPos += 6;
     doc.text(paper.institution, margin, yPos);
-
     addSpacing(15);
 
     // Abstract
     addText('Abstract', 14, true, [0, 102, 204]);
     addText(paper.abstract, 11);
-
     addSpacing(10);
 
     // Introduction
     addText('1. Introduction & Background', 14, true, [128, 0, 128]);
     addText(paper.sections.introduction, 11);
-
     addSpacing(10);
 
     // Objectives
@@ -91,7 +84,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     paper.sections.objectives.forEach((obj, idx) => {
       addText(`${idx + 1}. ${obj}`, 11);
     });
-
     addSpacing(10);
 
     // Significance
@@ -100,7 +92,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     paper.sections.significance.innovations.forEach((innovation) => {
       addText(`• ${innovation}`, 11);
     });
-
     addSpacing(10);
 
     // Methodology
@@ -111,7 +102,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
         addText(`• ${value}`, 11);
       });
     });
-
     addSpacing(10);
 
     // Expected Results
@@ -126,7 +116,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       addText(`• ${challenge}`, 11);
     });
     addText(`Mitigation: ${paper.sections.expectedResults.mitigation}`, 11, true);
-
     addSpacing(10);
 
     // Timeline
@@ -134,20 +123,19 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     paper.sections.timeline.forEach((item) => {
       addText(`${item.phase}: ${item.description}`, 11);
     });
-
     addSpacing(10);
 
     // References
     addText('References / Bibliography', 14, true, [128, 0, 128]);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-
+    
     paper.sections.references.forEach((ref, idx) => {
       if (yPos > pageHeight - margin) {
         doc.addPage();
         yPos = margin;
       }
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
       doc.text(`${idx + 1}. ${ref.title}`, margin, yPos);
       doc.textWithLink(ref.url, margin + 8, yPos + 5, { url: ref.url });
       yPos += 12;
@@ -167,7 +155,7 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
           transition={{ duration: 0.6 }}
           className="mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text ">
             {paper.title}
           </h1>
 
@@ -217,7 +205,7 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
         transition={{ duration: 0.6 }}
         className="mb-12"
       >
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text ">
           {paper.title}
         </h1>
 
