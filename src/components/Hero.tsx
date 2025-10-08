@@ -29,23 +29,33 @@ const Hero: React.FC = () => {
     <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 pt-20 relative">
       <div className="text-center max-w-2xl mx-auto">
         {/* Profile Photo - Responsive sizing */}
-        <div className="mb-4 sm:mb-6">
-          <Image 
+        <motion.div
+          className="mb-4 sm:mb-6"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Image
             src="/pablo_leyva_casual.JPG"
-            alt="Profile" 
+            alt="Profile"
             width={320}
             height={320}
             className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-full mx-auto border-4 border-white/10 shadow-2xl"
           />
-        </div>
+        </motion.div>
 
         {/* Quote Card - Responsive padding and text size */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-xl mt-8 sm:mt-12">
+        <motion.div
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-xl mt-8 sm:mt-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
           <blockquote className="text-gray-700 text-sm sm:text-base italic leading-relaxed">
             {text}
             {text.length < fullText.length && <span className="animate-pulse ml-1">|</span>}
           </blockquote>
-        </div>
+        </motion.div>
 
         {/* Chat Input Box */}
         <motion.div 

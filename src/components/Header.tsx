@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Github, Linkedin, Mail } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -24,14 +25,20 @@ const Header: React.FC = () => {
 
           {/* Center - Navigation */}
           <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
-            <a 
-              href="#ventures" 
+            <a
+              href="#ventures"
               className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
             >
               Ventures
             </a>
-            <a 
-              href="#contact" 
+            <Link
+              href="/research"
+              className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
+            >
+              Research
+            </Link>
+            <a
+              href="#contact"
               className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
             >
               Contact

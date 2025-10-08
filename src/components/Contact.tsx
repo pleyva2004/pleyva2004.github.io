@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Github, Linkedin, Mail, MapPin } from 'lucide-react';
 
 const Contact: React.FC = () => {
@@ -18,15 +19,15 @@ const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Create mailto URL with form data
     const mailtoUrl = `mailto:pleyva2004@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
       `${formData.message}`
     )}`;
-    
+
     // Open user's email client
     window.location.href = mailtoUrl;
-    
+
     // Reset form after sending
     setFormData({ subject: '', email: '', message: '' });
   };
@@ -35,16 +36,27 @@ const Contact: React.FC = () => {
     <section id="contact" className="py-32 px-6 bg-dark-bg">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <h2 className="text-4xl font-bold text-white mb-4">Get in Touch</h2>
           <p className="text-gray-400 text-lg">
             Feel free to reach out for collaborations or just a friendly chat
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-2 gap-12">
           {/* Left side - Contact Info */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <div className="mb-8">
               <h3 className="text-2xl font-semibold text-white mb-6">Connect With Me</h3>
               <div className="space-y-4">
@@ -84,10 +96,15 @@ const Contact: React.FC = () => {
                 <span>New York City • San Francisco</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right side - Message Form */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             <h3 className="text-2xl font-semibold text-white mb-6">Send a Message</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Subject Input */}
@@ -149,7 +166,7 @@ const Contact: React.FC = () => {
                 Open Email Client
               </button>
             </form>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
