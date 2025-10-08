@@ -30,43 +30,43 @@ export default function ResearchCard({ paper, index }: ResearchCardProps) {
     >
       <Link href={`/research/${paper.id}`}>
         <div
-          className={`group relative border-2 rounded-xl p-5 aspect-square flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl cursor-pointer ${statusColors[paper.status]}`}
+          className={`group relative border-2 rounded-lg p-3 aspect-square flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl cursor-pointer ${statusColors[paper.status]}`}
         >
           <div>
             {/* Status Badge */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <span
-                className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border ${badgeColors[paper.status]}`}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${badgeColors[paper.status]}`}
               >
                 {paper.status}
               </span>
               {paper.status === 'completed' && paper.pdfFileName && (
-                <FiFileText className="text-accent-green" size={18} />
+                <FiFileText className="text-accent-green" size={14} />
               )}
             </div>
 
             {/* Title */}
-            <h3 className="text-lg font-bold mb-3 text-white group-hover:text-accent-blue transition-colors line-clamp-4">
+            <h3 className="text-sm font-bold mb-2 text-white group-hover:text-accent-blue transition-colors line-clamp-4">
               {paper.title}
             </h3>
           </div>
 
           {/* Meta Info at bottom */}
-          <div className="space-y-2">
-            <div className="text-xs text-gray-400">
+          <div className="space-y-1.5">
+            <div className="text-[10px] text-gray-400">
               <div>{paper.date}</div>
               <div className="line-clamp-1">{paper.institution}</div>
             </div>
 
             {/* Read More Link */}
-            <div className="flex items-center gap-2 text-accent-blue group-hover:text-accent-purple transition-colors">
-              <span className="font-semibold text-xs">View details</span>
-              <FiArrowRight className="group-hover:translate-x-1 transition-transform" size={14} />
+            <div className="flex items-center gap-1.5 text-accent-blue group-hover:text-accent-purple transition-colors">
+              <span className="font-semibold text-[10px]">View details</span>
+              <FiArrowRight className="group-hover:translate-x-1 transition-transform" size={12} />
             </div>
           </div>
 
           {/* Gradient Border Glow Effect */}
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent-blue/0 via-accent-purple/0 to-accent-blue/0 group-hover:from-accent-blue/20 group-hover:via-accent-purple/20 group-hover:to-accent-blue/20 transition-all duration-300 pointer-events-none" />
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-accent-blue/0 via-accent-purple/0 to-accent-blue/0 group-hover:from-accent-blue/20 group-hover:via-accent-purple/20 group-hover:to-accent-blue/20 transition-all duration-300 pointer-events-none" />
         </div>
       </Link>
     </motion.div>

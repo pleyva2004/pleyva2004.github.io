@@ -78,31 +78,31 @@ export default function ReadingViewPage() {
       </nav>
 
       {/* Header */}
-      <div className="pt-20 pb-4 px-6">
+      <div className="pt-20 pb-4 px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="max-w-full"
         >
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
             {paper.title}
           </h1>
-          <p className="text-gray-400">
+          <p className="text-sm md:text-base text-gray-400">
             {paper.authors} ({paper.year})
           </p>
         </motion.div>
       </div>
 
       {/* Main Content - Side by Side View */}
-      <main className="h-[calc(100vh-240px)] p-6 pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+      <main className="p-4 md:p-6 pb-48 md:pb-56">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Left Panel - PDF (2/3 width) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="lg:col-span-2 h-[70vh]"
+            className="lg:col-span-2 h-[60vh] md:h-[70vh] lg:h-[75vh]"
           >
             <PDFViewer pdfUrl={pdfUrl} title={paper.title} />
           </motion.div>
@@ -112,7 +112,7 @@ export default function ReadingViewPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="lg:col-span-1 h-[70vh]"
+            className="lg:col-span-1 h-[60vh] md:h-[70vh] lg:h-[75vh]"
           >
             {notesUrl ? (
               <MarkdownNotesPanel notesUrl={notesUrl} title={paper.title} />
@@ -130,15 +130,6 @@ export default function ReadingViewPage() {
         </div>
       </main>
 
-      {/* Mobile Tab View (for small screens)pdf */}
-      <style jsx global>{`
-        @media (max-width: 1024px) {
-          .lg\\:col-span-2,
-          .lg\\:col-span-1 {
-            grid-column: span 1;
-          }
-        }
-      `}</style>
 
       <ChatInput />
     </div>

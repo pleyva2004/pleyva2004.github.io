@@ -45,51 +45,51 @@ export default function PDFViewer({ pdfUrl, title }: PDFViewerProps) {
   return (
     <div className="flex flex-col h-full bg-dark-card border border-accent-blue/20 rounded-lg overflow-hidden">
       {/* Controls */}
-      <div className="flex items-center justify-between p-4 border-b border-accent-blue/20 bg-dark-bg">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between p-3 md:p-4 gap-3 sm:gap-4 border-b border-accent-blue/20 bg-dark-bg">
+        <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={() => changePage(-1)}
             disabled={pageNumber <= 1}
-            className="p-2 rounded-lg bg-accent-blue/20 text-accent-blue hover:bg-accent-blue/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 md:p-2 rounded-lg bg-accent-blue/20 text-accent-blue hover:bg-accent-blue/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <FiChevronLeft size={20} />
+            <FiChevronLeft size={18} className="md:w-5 md:h-5" />
           </button>
-          <span className="text-gray-300 text-sm">
+          <span className="text-gray-300 text-xs md:text-sm whitespace-nowrap">
             Page {pageNumber} of {numPages || '...'}
           </span>
           <button
             onClick={() => changePage(1)}
             disabled={pageNumber >= numPages}
-            className="p-2 rounded-lg bg-accent-blue/20 text-accent-blue hover:bg-accent-blue/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 md:p-2 rounded-lg bg-accent-blue/20 text-accent-blue hover:bg-accent-blue/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <FiChevronRight size={20} />
+            <FiChevronRight size={18} className="md:w-5 md:h-5" />
           </button>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={zoomOut}
             disabled={scale <= 0.5}
-            className="p-2 rounded-lg bg-accent-purple/20 text-accent-purple hover:bg-accent-purple/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 md:p-2 rounded-lg bg-accent-purple/20 text-accent-purple hover:bg-accent-purple/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <FiZoomOut size={20} />
+            <FiZoomOut size={18} className="md:w-5 md:h-5" />
           </button>
-          <span className="text-gray-300 text-sm">{Math.round(scale * 100)}%</span>
+          <span className="text-gray-300 text-xs md:text-sm whitespace-nowrap min-w-[45px] text-center">{Math.round(scale * 100)}%</span>
           <button
             onClick={zoomIn}
             disabled={scale >= 2.0}
-            className="p-2 rounded-lg bg-accent-purple/20 text-accent-purple hover:bg-accent-purple/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 md:p-2 rounded-lg bg-accent-purple/20 text-accent-purple hover:bg-accent-purple/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <FiZoomIn size={20} />
+            <FiZoomIn size={18} className="md:w-5 md:h-5" />
           </button>
 
           <a
             href={pdfUrl}
             download
-            className="flex items-center gap-2 px-4 py-2 bg-accent-green/20 text-accent-green rounded-lg hover:bg-accent-green/30 transition-colors"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-accent-green/20 text-accent-green rounded-lg hover:bg-accent-green/30 transition-colors"
           >
-            <FiDownload size={18} />
-            <span className="text-sm font-semibold">Download</span>
+            <FiDownload size={16} className="md:w-[18px] md:h-[18px]" />
+            <span className="text-xs md:text-sm font-semibold">Download</span>
           </a>
         </div>
       </div>

@@ -61,7 +61,7 @@ export default function ResearchDetailPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="px-6 pt-24 pb-36">
+      <main className="px-6 pt-24 pb-56 md:pb-64">
         <ResearchDetail paper={paper} />
       </main>
 

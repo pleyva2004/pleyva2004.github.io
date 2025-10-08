@@ -48,7 +48,7 @@ export default function ResearchDashboard() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-7xl mx-auto px-6 pt-24 pb-48 md:pb-56">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Research Cards (70%) */}
           <div className="lg:col-span-2 space-y-8">
@@ -58,18 +58,18 @@ export default function ResearchDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
                 Research
               </h1>
-              <p className="text-gray-400 text-lg mb-6">
+              <p className="text-gray-400 text-base md:text-lg mb-6">
                 Explore my research projects and academic work
               </p>
 
               {/* Filter Tabs */}
-              <div className="flex gap-4 border-b border-accent-blue/20 pb-4">
+              <div className="flex gap-2 md:gap-4 border-b border-accent-blue/20 pb-4 overflow-x-auto">
                 <button
                   onClick={() => setFilter('all')}
-                  className={`px-4 py-2 font-semibold transition-all ${
+                  className={`px-3 md:px-4 py-2 font-semibold transition-all whitespace-nowrap ${
                     filter === 'all'
                       ? 'text-accent-blue border-b-2 border-accent-blue'
                       : 'text-gray-400 hover:text-gray-200'
@@ -79,7 +79,7 @@ export default function ResearchDashboard() {
                 </button>
                 <button
                   onClick={() => setFilter('ongoing')}
-                  className={`px-4 py-2 font-semibold transition-all ${
+                  className={`px-3 md:px-4 py-2 font-semibold transition-all whitespace-nowrap ${
                     filter === 'ongoing'
                       ? 'text-accent-blue border-b-2 border-accent-blue'
                       : 'text-gray-400 hover:text-gray-200'
@@ -89,7 +89,7 @@ export default function ResearchDashboard() {
                 </button>
                 <button
                   onClick={() => setFilter('completed')}
-                  className={`px-4 py-2 font-semibold transition-all ${
+                  className={`px-3 md:px-4 py-2 font-semibold transition-all whitespace-nowrap ${
                     filter === 'completed'
                       ? 'text-accent-green border-b-2 border-accent-green'
                       : 'text-gray-400 hover:text-gray-200'
@@ -108,7 +108,7 @@ export default function ResearchDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-3 gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
               >
                 {filteredPapers.length > 0 ? (
                   filteredPapers.map((paper, index) => (
