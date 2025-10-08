@@ -123,5 +123,5 @@ output = base_model(x) + alpha * adapter(x)
 
 ---
 
-**Status:** ✓ Read - Foundational for architecture decisions
+**Status:** Read - Foundational for architecture decisions
 **Read Date:** January 2025

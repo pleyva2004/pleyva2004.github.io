@@ -65,5 +65,5 @@ def identify_super_weights(model, threshold=3.0):
 
 ---
 
-**Status:** ⭐ Favorite - Critical for my research
+**Status:** Favorite - Critical for my research
 **Read Date:** January 2025

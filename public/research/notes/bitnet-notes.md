@@ -53,9 +53,9 @@ Where:
 -  Suitable for edge devices
 
 **Limitations:**
-- ⚠️ Requires training from scratch (not post-training quantization)
-- ⚠️ May lose some nuance in weight representation
-- ⚠️ Specialized hardware can maximize benefits
+-  Requires training from scratch (not post-training quantization)
+-  May lose some nuance in weight representation
+-  Specialized hardware can maximize benefits
 
 ## Integration with Super Weights
 
@@ -102,5 +102,5 @@ For my SLM project:
 
 ---
 
-**Status:** ⭐ Favorite - Core technique for my thesis
+**Status:**  Favorite - Core technique for my thesis
 **Read Date:** January 2025
