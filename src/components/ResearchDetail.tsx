@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { FiDownload, FiCalendar, FiUser, FiBook } from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import { ResearchPaper } from '@/constants/research/research-papers';
-import PDFViewer from '@/components/PDFViewer';
+import PDFViewer from '@/components/PDFViewerWrapper';
 
 interface ResearchDetailProps {
   paper: ResearchPaper;
