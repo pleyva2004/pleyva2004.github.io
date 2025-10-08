@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { LevrokLabs } from './provider';
 
 // Pablo's information for the system prompt
 const PABLO_INFO = `
@@ -39,173 +37,113 @@ If it is a long answer, write 2-3 sentences, and bullet points if more informati
 
 `;
 
-// AI Provider classes
-class ChatOpenAI {
-  private client: OpenAI;
-  private model: string;
 
-  constructor(model: string = "gpt-4o-mini") {
-    this.model = model;
-    this.client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-  }
+const RESEARCH_SYSTEM_PROMPT = `
+You are Pablo Leyva's AI assistant. You answer questions on Pablo's research, including his research papers, reading list, and notes.
 
-  async call(prompt: string): Promise<string> {
-    const response = await this.client.chat.completions.create({
-      model: this.model,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 1000,
-      temperature: 0.7
-    });
-    return response.choices[0].message.content || '';
-  }
-}
+Be helpful, professional, and knowledgeable about Pablo's research. You can help with questions about his research papers, reading list, and notes.
 
-class ChatClaude {
-  private client: Anthropic;
-  private model: string;
-
-  constructor(model: string = "claude-3-5-haiku-20241022") {
-    this.model = model;
-    this.client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
-  }
-
-  async call(prompt: string): Promise<string> {
-    const response = await this.client.messages.create({
-      model: this.model,
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }]
-    });
-    return response.content[0].type === 'text' ? response.content[0].text : '';
-  }
-}
-
-class ChatGemini {
-  private client: GoogleGenerativeAI;
-  private model: string;
-
-  constructor(model: string = "gemini-1.5-flash") {
-    this.model = model;
-    this.client = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
-  }
-
-  async call(prompt: string): Promise<string> {
-    const model = this.client.getGenerativeModel({ model: this.model });
-    const response = await model.generateContent(prompt);
-    return response.response.text();
-  }
-}
-
-class OllamaFallback {
-  async call(_prompt: string): Promise<string> {
-    console.log("OllamaFallback called");
-    console.log("--------------------------------");
-    console.log(_prompt);
-    console.log("--------------------------------");
-    return "Levrok Labs Model still down for maintenance";
-  }
-}
-
-class LevrokLabs {
-  private providers: Array<{ name: string; provider: ChatOpenAI | ChatGemini | ChatClaude | OllamaFallback }> = [];
-  private readonly TIMEOUT_MS = 10000; // 10 seconds
-
-  constructor() {
-    // Initialize available providers
-    if (process.env.GOOGLE_API_KEY) {
-      this.providers.push({ 
-        name: "Gemini", 
-        provider: new ChatGemini("gemini-1.5-flash") 
-      });
-    }
-    if (process.env.ANTHROPIC_API_KEY) {
-      this.providers.push({ 
-        name: "Claude", 
-        provider: new ChatClaude("claude-3-5-haiku-20241022") 
-      });
-    }
-    if (process.env.OPENAI_API_KEY) {
-      this.providers.push({ 
-        name: "OpenAI", 
-        provider: new ChatOpenAI("gpt-4o-mini") 
-      });
-    }
-
-
-    // Always add Ollama as final fallback
-    this.providers.push({ 
-      name: "Ollama", 
-      provider: new OllamaFallback() 
-    });
-
-    if (this.providers.length === 0) {
-      throw new Error("No AI providers available");
-    }
-  }
-
-  private async callWithTimeout(provider: ChatOpenAI | ChatGemini | ChatClaude | OllamaFallback, prompt: string): Promise<string> {
-    return Promise.race([
-      provider.call(prompt),
-      new Promise<string>((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout after 10 seconds')), this.TIMEOUT_MS)
-      )
-    ]);
-  }
-
-  async call(prompt: string): Promise<string> {
-    let lastError: Error | null = null;
-
-    for (const { name, provider } of this.providers) {
-      try {
-        console.log(`Trying ${name}...`);
-        const result = await this.callWithTimeout(provider, prompt);
-        console.log(`Successfully used ${name}`);
-        return result;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        if (errorMessage.includes('timeout')) {
-          console.warn(`${name} timed out after 10 seconds, switching to next provider`);
-        } else {
-          console.warn(`${name} failed:`, error);
-        }
-        lastError = error as Error;
-        continue;
-      }
-    }
-
-    // If all providers fail, throw the last error
-    throw new Error(`All AI providers failed. Last error: ${lastError?.message}`);
-  }
-}
+Do not be redundant, do not repeat the same information. Only say information once.
+Format: If it is a simple and quick answer, write the response as a Markdown bullet list, with each item on a new line. Ensure that the bullet points are indented.
+If it is a long answer, write 2-3 sentences, and bullet points if more information is needed. Use minimal Markdown. Only for headers and bullet points and italics if needed.
+`;
 
 export async function POST(request: NextRequest) {
+
   try {
     const body = await request.json();
-    const { question, history } = body;
+    
+    const { question, message, history, context } = body;
 
-    if (!question) {
+    const userQuestion = message || question;
+
+    if (!userQuestion) {
       return NextResponse.json(
-        { answer: "Please provide a question." },
+        { answer: "Please provide a question.", message: "Please provide a question." },
         { status: 400 }
       );
     }
 
     console.log("/ask called");
     console.log("--------------------------------");
-    console.log(question);
+    console.log(userQuestion);
+    console.log("Context:", context?.type);
     console.log("--------------------------------");
 
+    // Build context-aware system prompt
+
+    let systemPrompt = PABLO_INFO;
+    let contextInfo = '';
+
+    if (context) {
+
+      console.log("Research context");
+      console.log("--------------------------------");
+      console.log(context);
+      console.log("--------------------------------");
+      
+      systemPrompt = RESEARCH_SYSTEM_PROMPT;
+      switch (context.type) {
+        case 'research-list':
+          contextInfo = `
+            The user is viewing Pablo's research page with ${context.data.papers?.length || 0} research papers.
+            Current filter: ${context.data.currentFilter}
+
+            Available papers:
+            ${context.data.papers?.map((p: any) => `- ${p.title} (${p.status}): ${p.description}`).join('\n') || ''}
+
+            Reading list:
+            ${context.data.readingList?.map((p: any) => `- ${p.title} by ${p.authors} (${p.year})`).join('\n') || ''}
+
+            Only answer questions about the research content visible on this page.
+            `;
+          break;
+
+        case 'research-detail':
+          const paper = context.data.paper;
+          contextInfo = `
+              The user is viewing a specific research paper:
+
+              Title: ${paper?.title || ''}
+              Status: ${paper?.status || ''}
+              Description: ${paper?.description || ''}
+              Abstract: ${paper?.abstract || ''}
+              ${paper?.keyFindings ? `Key Findings:\n${paper.keyFindings.map((f: string) => `- ${f}`).join('\n')}` : ''}
+              ${paper?.technologies ? `Technologies: ${paper.technologies.join(', ')}` : ''}
+              ${paper?.timeline ? `Timeline: ${paper.timeline}` : ''}
+
+              Only answer questions about this specific research paper. If asked about other topics, politely redirect to the current paper.
+              `;
+          break;
+
+        case 'reading-page':
+          const readingPaper = context.data.paper;
+          contextInfo = `
+            The user is reading a research paper:
+
+            Title: ${readingPaper?.title || ''}
+            Authors: ${readingPaper?.authors || ''}
+            Year: ${readingPaper?.year || ''}
+            ${readingPaper?.abstract ? `Abstract: ${readingPaper.abstract}` : ''}
+
+            ${context.data.notes ? `Pablo's Notes:\n${context.data.notes}` : 'No notes available yet.'}
+
+            Only answer questions about this paper and Pablo's notes. Help explain concepts, summarize sections, or discuss the content visible on screen.
+            `;
+          break;
+      }
+    }
+
     const prompt = `
-    You are Pablo Leyva's AI assistaxnt. Here's information about Pablo:
+    You are Pablo Leyva's AI assistant. Here's information about Pablo:
 
-    ${PABLO_INFO}
+    ${systemPrompt}
 
-    Question: ${question}
+    ${contextInfo}
 
-    History: ${history}
+    Question: ${userQuestion}
+
+    ${history ? `History: ${history}` : ''}
 
     Answer:
     `;
@@ -214,18 +152,17 @@ export async function POST(request: NextRequest) {
     const answer = await llmClient.call(prompt);
 
     console.log("--------------------------------");
-    console.log(history);
-    console.log("--------------------------------");
     console.log(answer);
     console.log("--------------------------------");
 
-    return NextResponse.json({ answer });
+    return NextResponse.json({ answer, message: answer });
   } catch (error) {
     console.error('API Error:', error);
-    
+
     return NextResponse.json(
-      { 
-        answer: "Sorry, I'm having trouble connecting to the AI service right now. Please try again later." 
+      {
+        answer: "Sorry, I'm having trouble connecting to the AI service right now. Please try again later.",
+        message: "Sorry, I'm having trouble connecting to the AI service right now. Please try again later."
       },
       { status: 500 }
     );
