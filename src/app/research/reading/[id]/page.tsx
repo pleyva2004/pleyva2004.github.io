@@ -24,9 +24,13 @@ export default function ReadingViewPage() {
     if (paper?.notesFileName) {
       const notesUrl = `/research/notes/${paper.notesFileName}`;
       fetch(notesUrl)
-        .then((response) => response.text())
-        .then((text) => setNotesContent(text))
-        .catch((err) => console.error('Error loading notes for context:', err));
+        .then((response) => {
+          if (!response.ok) {
+            return 'Currently taking notes...';
+          }
+          return response.text();
+        })
+        .then((text) => setNotesContent(text));
     }
   }, [paper?.notesFileName]);
 

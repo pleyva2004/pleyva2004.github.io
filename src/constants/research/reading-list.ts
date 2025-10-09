@@ -13,6 +13,15 @@ export const readingList: ReadingItem[] = [
   
   //Currently Reading
   {
+    id: 'sperating-long-tail-and-common-knowledge',
+    title: 'Separating long-tail and common-knowledge of pretraining for LLMs',
+    authors: 'HadiPouransari, DavidGrangier, CThomas, MichaelKirchhof, OncelTuzel',
+    year: '2025',
+    pdfFileName: 'sperating-long-tail-and-common-knowledge.pdf',
+    notesFileName: 'sperating-long-tail-and-common-knowledge-notes.md',
+    category: 'currently-reading'
+  },
+  {
     id: 'recursive-reasoning-tiny-networks',
     title: 'Recursive Reasoning with Tiny Networks',
     authors: 'Alexia Jolicoeur-Martineau',

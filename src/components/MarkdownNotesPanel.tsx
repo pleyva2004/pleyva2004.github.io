@@ -25,7 +25,7 @@ export default function MarkdownNotesPanel({ notesUrl, title }: MarkdownNotesPan
     fetch(notesUrl)
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Failed to load notes');
+          return 'Currently taking notes...';
         }
         return response.text();
       })
@@ -48,7 +48,7 @@ export default function MarkdownNotesPanel({ notesUrl, title }: MarkdownNotesPan
       })
       .catch((err) => {
         console.error('Error loading markdown:', err);
-        setError('Notes coming soon...');
+        setError('Notes file not found. Start taking notes!');
         setLoading(false);
       });
   }, [notesUrl]);
@@ -73,7 +73,7 @@ export default function MarkdownNotesPanel({ notesUrl, title }: MarkdownNotesPan
           <h3 className="text-lg font-semibold text-accent-purple">My Notes</h3>
         </div>
         <div className="flex items-center justify-center h-full p-8">
-          <p className="text-gray-400 text-center">{error || 'No notes available.'}</p>
+          <p className="text-gray-400 text-center">{error || 'Currently taking notes...'}</p>
         </div>
       </div>
     );
