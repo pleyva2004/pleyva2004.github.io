@@ -44,7 +44,8 @@ interface ReadingPaper {
   year: string;
   pdfFileName: string;
   notesFileName?: string;
-  category: 'favorites' | 'read';
+  category: 'favorites' | 'read' | 'currently-reading';
+  readDate?: string;
 }
 
 export type PageContextType =

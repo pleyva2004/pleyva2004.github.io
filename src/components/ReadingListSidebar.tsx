@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FiStar, FiCheckCircle } from 'react-icons/fi';
+import { FiStar, FiCheckCircle, FiBookOpen } from 'react-icons/fi';
 import Link from 'next/link';
 import { ReadingItem } from '@/constants/research/reading-list';
 
@@ -11,6 +11,7 @@ interface ReadingListSidebarProps {
 }
 
 export default function ReadingListSidebar({ items }: ReadingListSidebarProps) {
+  const currentlyReading = items.filter((item) => item.category === 'currently-reading');
   const favorites = items.filter((item) => item.category === 'favorites');
   const read = items.filter((item) => item.category === 'read');
 
@@ -29,9 +30,18 @@ export default function ReadingListSidebar({ items }: ReadingListSidebarProps) {
           </h4>
 
           {/* Author & Year */}
-          <p className="text-xs text-gray-400">
-            {item.authors} ({item.year})
-          </p>
+          <div className="flex items-end justify-between gap-2">
+            <p className="text-xs text-gray-400">
+              {item.authors} ({item.year})
+            </p>
+
+            {/* Read Date */}
+            {item.readDate && (
+              <p className="text-[10px] text-gray-500 shrink-0">
+                Read: {item.readDate}
+              </p>
+            )}
+          </div>
 
           {/* Hover Glow Effect */}
           <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent-blue/0 to-accent-purple/0 group-hover:from-accent-blue/10 group-hover:to-accent-purple/10 transition-all duration-300 pointer-events-none" />
@@ -49,10 +59,23 @@ export default function ReadingListSidebar({ items }: ReadingListSidebarProps) {
         transition={{ duration: 0.6 }}
       >
         <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
-          Currently Reading
+          Reading List
         </h2>
         <p className="text-sm text-gray-400">External research papers & notes</p>
       </motion.div>
+
+      {/* Currently Reading Section */}
+      {currentlyReading.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <FiBookOpen className="text-accent-blue" size={18} />
+            <h3 className="text-lg font-semibold text-accent-blue">Currently Reading</h3>
+          </div>
+          <div className="space-y-3">
+            {currentlyReading.map((item, index) => renderItem(item, index))}
+          </div>
+        </div>
+      )}
 
       {/* Favorites Section */}
       {favorites.length > 0 && (
@@ -62,7 +85,7 @@ export default function ReadingListSidebar({ items }: ReadingListSidebarProps) {
             <h3 className="text-lg font-semibold text-yellow-400">Favorites</h3>
           </div>
           <div className="space-y-3">
-            {favorites.map((item, index) => renderItem(item, index))}
+            {favorites.map((item, index) => renderItem(item, index + currentlyReading.length))}
           </div>
         </div>
       )}
@@ -75,7 +98,7 @@ export default function ReadingListSidebar({ items }: ReadingListSidebarProps) {
             <h3 className="text-lg font-semibold text-accent-green">Read</h3>
           </div>
           <div className="space-y-3">
-            {read.map((item, index) => renderItem(item, index + favorites.length))}
+            {read.map((item, index) => renderItem(item, index + currentlyReading.length + favorites.length))}
           </div>
         </div>
       )}

@@ -123,7 +123,7 @@ export default function ReadingViewPage() {
                   <h3 className="text-lg font-semibold text-accent-purple">My Notes</h3>
                 </div>
                 <div className="flex items-center justify-center h-full p-8">
-                  <p className="text-gray-400 text-center">Notes coming soon...</p>
+                  <p className="text-gray-400 text-center">Currently taking notes...</p>
                 </div>
               </div>
             )}

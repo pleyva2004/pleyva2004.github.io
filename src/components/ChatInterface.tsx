@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 
 interface Message {
@@ -383,7 +385,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                     >
                       <div className="text-sm leading-relaxed">
                         <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
+                          remarkPlugins={[remarkGfm, remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
                           components={{
                             h1: (props) => <h1 className="text-lg font-bold mb-3 mt-2" {...props} />,
                             h2: (props) => <h2 className="text-base font-bold mb-2 mt-3" {...props} />,

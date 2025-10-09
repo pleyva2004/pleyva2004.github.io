@@ -20,7 +20,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     const maxWidth = pageWidth - 2 * margin;
     let yPos = margin;
 
-    // 📐 --- Spacing configuration (LaTeX inspired) ---
     const spacing = {
       sectionBefore: 12,
       sectionAfter: 6,
@@ -32,7 +31,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       listAfter: 4,
     };
 
-    // ✅ Page break helper
     const ensureSpace = (neededHeight = 0) => {
       if (yPos + neededHeight > pageHeight - margin) {
         doc.addPage();
@@ -40,7 +38,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       }
     };
 
-    // ✍️ Paragraph / Body Text
     const addText = (
       text: string,
       fontSize: number = 11,
@@ -60,7 +57,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       yPos += spacing.paragraph;
     };
 
-    // 📌 Section headers
     const addSection = (title: string, color: [number, number, number] = [0, 102, 204]) => {
       yPos += spacing.sectionBefore;
       ensureSpace(14);
@@ -71,7 +67,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       yPos += spacing.sectionAfter;
     };
 
-    // 📌 Subsection headers
     const addSubsection = (title: string) => {
       yPos += spacing.subsectionBefore;
       ensureSpace(12);
@@ -82,7 +77,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       yPos += spacing.subsectionAfter;
     };
 
-    // • Bullet lists (like LaTeX itemize)
     const addBulletList = (items: string[]) => {
       yPos += spacing.listBefore;
       doc.setFontSize(11);
@@ -104,7 +98,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       yPos += spacing.listAfter;
     };
 
-    // ① Numbered lists (like LaTeX enumerate)
     const addNumberedList = (items: string[]) => {
       yPos += spacing.listBefore;
       doc.setFontSize(11);
@@ -127,7 +120,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       yPos += spacing.listAfter;
     };
 
-    // 🧭 --- Title block (centered) ---
     const title = 'Hyper-Efficient On-Device Small Language Models for Structured Agentic Workflows';
     const titleLines = doc.splitTextToSize(title, maxWidth);
     const totalTitleHeight = titleLines.length * 10 + 50; // rough estimate
@@ -254,7 +246,6 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
 
     addSection('References / Bibliography', [128, 0, 128]);
 
-    // Reference 1 with link
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(0, 0, 0);
@@ -263,19 +254,16 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     doc.textWithLink('https://arxiv.org/pdf/2407.21075v1', margin + 8, yPos + 5, { url: 'https://arxiv.org/pdf/2407.21075v1' });
     yPos += 12;
 
-    // Reference 2 with link
     ensureSpace(12);
     doc.text('2. Yu, M. et al. (2025). The Super Weight in Large Language Models.', margin, yPos);
     doc.textWithLink('https://arxiv.org/pdf/2411.07191', margin + 8, yPos + 5, { url: 'https://arxiv.org/pdf/2411.07191' });
     yPos += 12;
 
-    // Reference 3 with link
     ensureSpace(12);
     doc.text('3. Ma, S. et al. (2024). The Era of 1-bit LLMs: All Large Language Models are in 1.58 Bits.', margin, yPos);
     doc.textWithLink('https://arxiv.org/pdf/2402.17764', margin + 8, yPos + 5, { url: 'https://arxiv.org/pdf/2402.17764' });
     yPos += 12;
 
-    // Reference 4 with link
     ensureSpace(12);
     doc.text('4. Belcak, P. et al. (2025). Small Language Models are the Future of Agentic AI.', margin, yPos);
     doc.textWithLink('https://arxiv.org/pdf/2506.02153', margin + 8, yPos + 5, { url: 'https://arxiv.org/pdf/2506.02153' });
