@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
 import { FiDownload } from 'react-icons/fi';
 import 'highlight.js/styles/tokyo-night-dark.css';
 import 'katex/dist/katex.min.css';
@@ -29,7 +30,20 @@ export default function MarkdownNotesPanel({ notesUrl, title }: MarkdownNotesPan
         return response.text();
       })
       .then((text) => {
-        setMarkdownContent(text);
+        // Convert LaTeX delimiters to markdown math syntax
+        let processedText = text
+          .replace(/\\\[/g, '$$')
+          .replace(/\\\]/g, '$$')
+          .replace(/\\\(/g, '$')
+          .replace(/\\\)/g, '$');
+
+        // Format Status and Read Date to be on separate lines
+        processedText = processedText.replace(
+          /\*\*Status:\*\*\s*(.+?)\s*\*\*Read Date:\*\*/g,
+          '**Status:** $1  \n**Read Date:**'
+        );
+
+        setMarkdownContent(processedText);
         setLoading(false);
       })
       .catch((err) => {
@@ -82,22 +96,25 @@ export default function MarkdownNotesPanel({ notesUrl, title }: MarkdownNotesPan
 
       {/* Markdown Content */}
       <div className="flex-1 overflow-y-auto p-6 bg-dark-bg custom-scrollbar">
-        <article className="prose prose-invert prose-sm max-w-none">
+        <article className="prose prose-invert prose-sm max-w-none [&_.katex-display]:my-6 [&_.katex]:text-gray-100">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeKatex, rehypeHighlight]} // rehypeKatex must come before highlight for math blocks
+            remarkPlugins={[
+              remarkGfm,
+              remarkMath
+            ]}
+            rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]} // rehypeKatex must come before highlight for math blocks
             components={{
               h1: (props) => (
-                <h1 className="text-2xl font-bold text-accent-blue mb-4 mt-6" {...props} />
+                <h1 className="text-2xl font-bold text-accent-blue mb-6 mt-8" {...props} />
               ),
               h2: (props) => (
-                <h2 className="text-xl font-semibold text-accent-purple mb-3 mt-5" {...props} />
+                <h2 className="text-xl font-semibold text-accent-purple mb-4 mt-8" {...props} />
               ),
               h3: (props) => (
-                <h3 className="text-lg font-semibold text-accent-green mb-2 mt-4" {...props} />
+                <h3 className="text-lg font-semibold text-accent-green mb-3 mt-6" {...props} />
               ),
               p: (props) => (
-                <p className="text-gray-300 leading-relaxed mb-4" {...props} />
+                <p className="text-gray-300 leading-relaxed mb-6" {...props} />
               ),
               code: ({ inline, className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode }) =>
                 inline ? (

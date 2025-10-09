@@ -49,7 +49,7 @@ export default function ResearchDetailPage() {
     <div className="min-h-screen bg-dark-bg text-white">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-bg/80 backdrop-blur-md border-b border-accent-blue/20">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+        <div className="max-w-full px-6 py-4">
           <Link
             href="/research"
             className="inline-flex items-center gap-2 text-accent-blue hover:text-accent-blue/80 transition-colors"
@@ -60,7 +60,7 @@ export default function ResearchDetailPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="px-6 pt-24 pb-56 md:pb-64">
+      <main className="pt-32 pb-48 px-4 md:px-6">
         <ResearchDetail paper={paper} />
       </main>
 

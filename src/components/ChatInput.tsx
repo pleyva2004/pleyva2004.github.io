@@ -91,8 +91,10 @@ const ChatInput: React.FC = () => {
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+    if (messagesEndRef.current && isExpanded) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isLoading, isExpanded]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -360,6 +362,9 @@ const ChatInput: React.FC = () => {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Scroll anchor */}
+                  <div ref={messagesEndRef} />
                 </>
               )}
             </div>
