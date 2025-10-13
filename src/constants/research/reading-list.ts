@@ -11,14 +11,15 @@ export interface ReadingItem {
 
 export const readingList: ReadingItem[] = [
   
-  //Currently Reading
+    //Currently Reading
+    
   {
-    id: 'sperating-long-tail-and-common-knowledge',
-    title: 'Separating long-tail and common-knowledge of pretraining for LLMs',
-    authors: 'HadiPouransari, DavidGrangier, CThomas, MichaelKirchhof, OncelTuzel',
-    year: '2025',
-    pdfFileName: 'sperating-long-tail-and-common-knowledge.pdf',
-    notesFileName: 'sperating-long-tail-and-common-knowledge-notes.md',
+    id: 'ssm',
+    title: 'Space State Models',
+    authors: 'Tri Dao, Albert Gu',
+    year: '2024',
+    pdfFileName: 'ssm.pdf',
+    notesFileName: 'ssm-notes.md',
     category: 'currently-reading'
   },
   {
