@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Github, Linkedin, MessageCircle, Youtube, Mail, MapPin } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Github, Linkedin, Mail, MapPin } from 'lucide-react';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    subject: '',
     email: '',
     message: ''
   });
@@ -18,24 +19,44 @@ const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
+
+    // Create mailto URL with form data
+    const mailtoUrl = `mailto:pleyva2004@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
+      `${formData.message}`
+    )}`;
+
+    // Open user's email client
+    window.location.href = mailtoUrl;
+
+    // Reset form after sending
+    setFormData({ subject: '', email: '', message: '' });
   };
 
   return (
     <section id="contact" className="py-32 px-6 bg-dark-bg">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <h2 className="text-4xl font-bold text-white mb-4">Get in Touch</h2>
           <p className="text-gray-400 text-lg">
             Feel free to reach out for collaborations or just a friendly chat
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-2 gap-12">
           {/* Left side - Contact Info */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <div className="mb-8">
               <h3 className="text-2xl font-semibold text-white mb-6">Connect With Me</h3>
               <div className="space-y-4">
@@ -43,7 +64,7 @@ const Contact: React.FC = () => {
                   href="https://github.com/pleyva2004" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-c nter text-gray-300 hover:text-white transition-colors group"
+                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
                 >
                   <Github size={20} className="mr-3" />
                   <span>GitHub</span>
@@ -56,24 +77,6 @@ const Contact: React.FC = () => {
                 >
                   <Linkedin size={20} className="mr-3" />
                   <span>LinkedIn</span>
-                </a>
-                <a 
-                  href="https://discord.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
-                >
-                  <MessageCircle size={20} className="mr-3" />
-                  <span>Discord</span>
-                </a>
-                <a 
-                  href="https://youtube.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
-                >
-                  <Youtube size={20} className="mr-3" />
-                  <span>YouTube</span>
                 </a>
                 <a 
                   href="mailto:pleyva2004@gmail.com"
@@ -93,32 +96,38 @@ const Contact: React.FC = () => {
                 <span>New York City • San Francisco</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right side - Message Form */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             <h3 className="text-2xl font-semibold text-white mb-6">Send a Message</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name Input */}
+              {/* Subject Input */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                  Name
+                <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
+                  Subject
                 </label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
+                  id="subject"
+                  name="subject"
+                  value={formData.subject}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors"
-                  placeholder="Your name"
+                  placeholder="Subject line"
+                  required
                 />
               </div>
 
               {/* Email Input */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Email
+                  Your Email
                 </label>
                 <input
                   type="email"
@@ -128,6 +137,7 @@ const Contact: React.FC = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors"
                   placeholder="your@email.com"
+                  required
                 />
               </div>
 
@@ -144,6 +154,7 @@ const Contact: React.FC = () => {
                   rows={5}
                   className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors resize-none"
                   placeholder="Your message..."
+                  required
                 />
               </div>
 
@@ -152,10 +163,10 @@ const Contact: React.FC = () => {
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-dark-bg"
               >
-                Send Message
+                Open Email Client
               </button>
             </form>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

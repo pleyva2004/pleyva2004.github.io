@@ -1,5 +1,6 @@
 import React from 'react';
-import { Home, Share2, MessageCircle } from 'lucide-react';
+import { Home, Share2, MessageCircle, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 interface SidebarProps {
   onNetworkToggle: () => void;
@@ -21,20 +22,28 @@ const Sidebar: React.FC<SidebarProps> = ({ onNetworkToggle, onChatToggle }) => {
           </button>
 
           {/* Chat Button */}
-          <button 
+          <button
             onClick={onChatToggle}
             className="w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white hover:bg-white/10 transition-colors"
           >
             <MessageCircle size={20} />
           </button>
-          
+
           {/* Network Button */}
-          <button 
+          <button
             onClick={onNetworkToggle}
             className="w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white hover:bg-white/10 transition-colors"
           >
             <Share2 size={20} />
           </button>
+
+          {/* Research Button */}
+          <Link
+            href="/research"
+            className="w-12 h-12 rounded-full bg-transparent flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+          >
+            <FileText size={20} />
+          </Link>
           
         </div>
       </div>
@@ -51,20 +60,28 @@ const Sidebar: React.FC<SidebarProps> = ({ onNetworkToggle, onChatToggle }) => {
           </button>
           
           {/* Share/Network Button */}
-          <button 
+          <button
             onClick={onNetworkToggle}
             className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-white hover:bg-white/10 transition-colors"
           >
             <Share2 size={18} />
           </button>
-          
+
           {/* Chat Button */}
-          <button 
+          <button
             onClick={onChatToggle}
             className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-white hover:bg-white/10 transition-colors"
           >
             <MessageCircle size={18} />
           </button>
+
+          {/* Research Button */}
+          <Link
+            href="/research"
+            className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+          >
+            <FileText size={18} />
+          </Link>
         </div>
       </div>
     </>

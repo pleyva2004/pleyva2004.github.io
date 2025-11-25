@@ -1,34 +1,44 @@
 import React from 'react';
-import { Github, Linkedin, Mail, MessageCircle, Youtube } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Github, Linkedin, Mail } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-dark-bg/90 backdrop-blur-sm border-b border-dark-border/50">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-dark-bg/80 backdrop-blur-sm border-b border-dark-border/50">
       <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between relative">
           {/* Left side - Profile info */}
           <div className="flex items-center space-x-3">
-            <img 
-              src="/pablo_leyva.jpg" 
+            <Image 
+              src="/pablo_leyva.JPG" 
               alt="Profile" 
+              width={44}
+              height={44}
               className="w-11 h-11 rounded-full border border-gray-600"
             />
             <div>
-              <h1 className="text-lg font-semibold text-white leading-tight">Pablo Leyva</h1>
-              <p className="text-sm text-gray-400 leading-tight">NYC • SFO</p>
+              <h1 className="text-base font-semibold text-white leading-tight">Pablo Leyva</h1>
+              <p className="text-xs text-gray-400 leading-tight">NYC • SFO</p>
             </div>
           </div>
 
           {/* Center - Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <a 
-              href="#ventures" 
+          <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+            <a
+              href="#ventures"
               className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
             >
               Ventures
             </a>
-            <a 
-              href="#contact" 
+            <Link
+              href="/research"
+              className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
+            >
+              Research
+            </Link>
+            <a
+              href="#contact"
               className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
             >
               Contact
@@ -59,22 +69,7 @@ const Header: React.FC = () => {
             >
               <Mail size={18} />
             </a>
-            <a 
-              href="https://discord.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white transition-colors duration-200"
-            >
-              <MessageCircle size={18} />
-            </a>
-            <a 
-              href="https://youtube.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white transition-colors duration-200"
-            >
-              <Youtube size={18} />
-            </a>
+         
           </div>
         </div>
       </div>
