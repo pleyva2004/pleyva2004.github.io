@@ -8,10 +8,11 @@ export interface RealtimeEventItem extends Record<string, unknown> {
   type?: string;
   call_id?: string;
   name?: string;
+  arguments?: string;
 }
 
 export interface RealtimeEvent extends Record<string, unknown> {
-  type?: string;
+  type: string;
   delta?: string;
   item?: RealtimeEventItem;
   item_id?: string;
@@ -19,4 +20,3 @@ export interface RealtimeEvent extends Record<string, unknown> {
   name?: string;
   function_name?: string;
 }
-

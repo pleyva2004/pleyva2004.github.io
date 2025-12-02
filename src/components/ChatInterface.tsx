@@ -7,8 +7,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import { buildSessionConfig } from '@/lib/realtime/session-config';
 import type { RealtimeEvent } from '@/lib/realtime/types';
-
 
 interface Message {
   id: string;
@@ -32,12 +32,6 @@ const quickReplies = [
 // We'll use Next.js API routes instead of direct backend calls
 const API_URL = "/api";
 
-// Add proper type for the API body
-interface APIRequestBody {
-  question: string;
-  conversationHistory?: Message[];
-}
-
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -48,10 +42,144 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [userColor, setUserColor] = useState<string>(() => {
     // Load saved color from localStorage or default to brown
     return localStorage.getItem('chatUserColor') || 'brown';
   });
+
+  const wsRef = useRef<WebSocket | null>(null);
+  const currentResponseIdRef = useRef<string | null>(null);
+
+  // Initialize Realtime WebSocket
+  useEffect(() => {
+    if (wsRef.current) return;
+
+    const connect = async () => {
+      try {
+        console.log("[Chat] Requesting ephemeral token...");
+        const tokenRes = await fetch(`${API_URL}/realtime`, { method: "POST" });
+        if (!tokenRes.ok) throw new Error("Failed to get session token");
+
+        const data = await tokenRes.json();
+        const secret = data.client_secret.value;
+
+        console.log("[Chat] Connecting to OpenAI Realtime...");
+        const ws = new WebSocket(
+          "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",
+          [
+            "realtime",
+            `openai-insecure-api-key.${secret}`,
+            "openai-beta.realtime-v1",
+          ]
+        );
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          console.log("[Chat] WebSocket connected");
+          setIsConnected(true);
+
+          // Send session configuration
+          const config = buildSessionConfig({ mode: 'text' });
+          ws.send(JSON.stringify({
+            type: 'session.update',
+            session: config
+          }));
+        };
+
+        ws.onmessage = async (event) => {
+          try {
+            const data = JSON.parse(event.data) as RealtimeEvent;
+            handleRealtimeEvent(data);
+          } catch (err) {
+            console.error("[Chat] Error parsing event:", err);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log("[Chat] WebSocket closed");
+          setIsConnected(false);
+        };
+
+        ws.onerror = (err) => {
+          console.error("[Chat] WebSocket error:", err);
+        };
+
+      } catch (err) {
+        console.error("[Chat] Connection failed:", err);
+      }
+    };
+
+    connect();
+
+    return () => {
+      wsRef.current?.close();
+      wsRef.current = null;
+    };
+  }, []);
+
+  const handleRealtimeEvent = async (event: RealtimeEvent) => {
+    // console.log("[Chat] Event:", event.type);
+
+    switch (event.type) {
+      case 'response.text.delta': {
+        const delta = event.delta || '';
+        if (currentResponseIdRef.current) {
+          setMessages(prev => prev.map(msg =>
+            msg.id === currentResponseIdRef.current
+              ? { ...msg, text: msg.text + delta }
+              : msg
+          ));
+        }
+        break;
+      }
+
+      case 'response.output_item.done': {
+        const item = event.item;
+        if (item?.type === 'function_call') {
+          console.log("[Chat] Function call:", item.name, item.arguments);
+          // Execute tool via API route
+          try {
+            const res = await fetch(`${API_URL}/tools`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: item.call_id,
+                name: item.name,
+                argumentsJson: item.arguments
+              })
+            });
+
+            const result = await res.json();
+            console.log("[Chat] Tool result:", result);
+
+            // Send result back
+            wsRef.current?.send(JSON.stringify({
+              type: "conversation.item.create",
+              item: {
+                type: "function_call_output",
+                call_id: item.call_id,
+                output: JSON.stringify(result)
+              }
+            }));
+
+            // Trigger response
+            wsRef.current?.send(JSON.stringify({ type: "response.create" }));
+
+          } catch (err) {
+            console.error("[Chat] Tool execution failed:", err);
+          }
+        }
+        break;
+      }
+
+      case 'response.done': {
+        setIsTyping(false);
+        break;
+      }
+    }
+  };
+
 
   // Window state
   const [windowSize, setWindowSize] = useState({ width: 80, height: 80 }); // in vw/vh units
@@ -176,55 +304,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   }, [isDragging, isResizing, dragStart, resizeStart, windowSize.width, windowSize.height]);
 
 
-  const sendMessageToAPI = async (body: APIRequestBody): Promise<string> => {
-    if (process.env.MODE === 'development') {
-      console.log("Sending message to API");
-      console.log(body.question);
-      console.log("--------------------------------")
-      console.log(API_URL)
-    }
-
-    try {
-      // Build conversation history from messages (excluding the current message)
-      const conversationHistory = messages.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.text
-      }));
-
-      // Use Realtime API with correct format
-      const response = await fetch(`${API_URL}/realtime`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mode: 'text',
-          userInput: body.question,
-          conversationHistory: conversationHistory
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = (await response.json()) as { events?: RealtimeEvent[] };
-
-      // Extract text response from Realtime API events
-      const textResponse = data.events
-        ?.filter((event) => event.type === 'response.text.delta')
-        .map((event) => event.delta ?? '')
-        .join('') || "Sorry, I couldn't process that request.";
-
-      console.log('Realtime API Response:', textResponse);
-
-      return textResponse;
-    } catch (error) {
-      console.error('API Error:', error);
-      return "Sorry, I'm having trouble connecting right now. Please try again.";
-    }
-  };
-
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
 
@@ -268,52 +347,66 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       return;
     }
 
+    // Normal message handling via WebSocket
+    if (!isConnected || !wsRef.current) {
+        // Fallback or error if not connected
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            text: text,
+            sender: 'user',
+        };
+        const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            text: "I'm currently disconnected. Please close and reopen the chat to reconnect.",
+            sender: 'bot',
+        };
+        setMessages(prev => [...prev, userMessage, errorMessage]);
+        setInputText('');
+        return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text: text,
       sender: 'user',
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Create placeholder for bot response
+    const botMsgId = (Date.now() + 1).toString();
+    const botMessage: Message = {
+        id: botMsgId,
+        text: '', // Starts empty, will stream in
+        sender: 'bot',
+    };
+    currentResponseIdRef.current = botMsgId;
+
+    setMessages(prev => [...prev, userMessage, botMessage]);
     setInputText('');
     setIsTyping(true);
 
     try {
+        // Send user input to Realtime API
+        wsRef.current.send(JSON.stringify({
+            type: "conversation.item.create",
+            item: {
+                type: "message",
+                role: "user",
+                content: [
+                    {
+                        type: "input_text",
+                        text: text
+                    }
+                ]
+            }
+        }));
 
+        wsRef.current.send(JSON.stringify({
+            type: "response.create"
+        }));
 
-      // SHORT TERM MEMORY
-      // Get the last 3 messages
-      const tempMessages = messages.slice(-3);
-
-      const history = tempMessages.map(message => ({
-        text: message.text,
-        sender: message.sender
-      }));
-
-
-      const body = {
-        question: text,
-        history: history
-      }
-
-      const response = await sendMessageToAPI(body);
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response,
-        sender: 'bot',
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-    } catch {  // Remove unused error parameter
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: 'Sorry, I encountered an error. Please try again.',
-        sender: 'bot',
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
+    } catch (err) {
+        console.error("Failed to send message:", err);
+        setIsTyping(false);
     }
   };
 
