@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import WebSocket from "ws";
 import { buildSessionConfig, type SessionMode } from "@/lib/realtime/session-config";
 import { executeToolCall, type ParsedToolCall } from "@/lib/realtime/tool-executor";
+import type { RealtimeEvent } from "@/lib/realtime/types";
 
 export const runtime = "nodejs"; // Ensure Node runtime (needed for ws)
 
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
   console.log("[Realtime Route] Connecting to OpenAI Realtime API...");
 
   // We'll collect events into an array for returning in the HTTP response (demo).
-  const collectedEvents: any[] = [];
+  const collectedEvents: RealtimeEvent[] = [];
 
   // We'll wrap the entire WS session in a Promise so we can await it in the POST handler.
   const sessionPromise = new Promise<void>((resolve, reject) => {
@@ -90,10 +91,8 @@ export async function POST(req: NextRequest) {
 
     // Keep track of an in-progress tool call (if any)
     let currentToolCall: ParsedToolCall | null = null;
-    let processingToolCall = false;
     let toolExecuting = false; // Track if a tool is actively executing (async in progress)
     let lastResponseWasFunctionCall = false; // Track if the last response was a function call
-    let responseCount = 0;
 
     // STEP 3: On open, configure session + send user input
     ws.on("open", () => {
@@ -159,10 +158,10 @@ export async function POST(req: NextRequest) {
     // STEP 4: Handle incoming events from OpenAI
     ws.on("message", async (rawData: WebSocket.RawData) => {
       const messageString = rawData.toString("utf-8");
-      let event: any;
+      let event: RealtimeEvent;
 
       try {
-        event = JSON.parse(messageString);
+        event = JSON.parse(messageString) as RealtimeEvent;
       } catch (err) {
         console.error("[Realtime Route] Failed to parse OpenAI event JSON:", err, {
           raw: messageString
@@ -222,8 +221,7 @@ export async function POST(req: NextRequest) {
 
         console.log("[Realtime Route] Output item done:", JSON.stringify(event, null, 2));
 
-        if (item.type === "function_call" && currentToolCall) {
-          processingToolCall = true;
+        if (item && item.type === "function_call" && currentToolCall) {
           toolExecuting = true; // Mark tool as actively executing
           lastResponseWasFunctionCall = true; // This response is a function call
 
@@ -250,7 +248,7 @@ export async function POST(req: NextRequest) {
               type: "conversation.item.create",
               item: {
                 type: "function_call_output",
-                call_id: item.call_id,
+                call_id: item?.call_id,
                 output: JSON.stringify(toolResult)
               }
             })
@@ -265,7 +263,7 @@ export async function POST(req: NextRequest) {
 
           // Clear the currentToolCall
           currentToolCall = null;
-        } else if (item.type === "message") {
+        } else if (item && item.type === "message") {
           // This is a text message response, not a function call
           lastResponseWasFunctionCall = false;
         }
@@ -273,8 +271,6 @@ export async function POST(req: NextRequest) {
 
       // 4e. When the model indicates the response is done, we can end session
       if (event.type === "response.done") {
-        responseCount++;
-
         // Don't close if a tool is currently executing
         if (toolExecuting) {
           console.log("\n[Realtime Route] Response done, but tool is still executing. Waiting...");

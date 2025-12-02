@@ -23,9 +23,9 @@ export async function executeToolCall(
   toolCall: ParsedToolCall
 ): Promise<unknown> {
   // 1. Parse the JSON arguments sent by the model
-  let args: any;
+  let parsedArgs: unknown;
   try {
-    args = JSON.parse(toolCall.argumentsJson || "{}");
+    parsedArgs = JSON.parse(toolCall.argumentsJson || "{}");
   } catch (err) {
     console.error("[Tool Executor] Failed to parse tool arguments:", err, {
       raw: toolCall.argumentsJson
@@ -39,10 +39,10 @@ export async function executeToolCall(
   // 2. Dispatch based on tool name
   switch (toolCall.name) {
     case "check_availability":
-      return handleCheckAvailability(args as CheckAvailabilityArgs);
+      return handleCheckAvailability(parsedArgs as CheckAvailabilityArgs);
 
     case "book_meeting":
-      return handleBookMeeting(args as ScheduleMeetingRequest);
+      return handleBookMeeting(parsedArgs as ScheduleMeetingRequest);
 
     default:
       console.warn("[Tool Executor] Unknown tool name:", toolCall.name);

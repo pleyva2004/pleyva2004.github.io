@@ -1,6 +1,4 @@
 // lib/realtime/tools.ts
-import type { ScheduleMeetingRequest } from "@/lib/types";
-
 /**
  * Tool argument types (TypeScript) for internal use.
  * These are NOT sent to the model directly, but we base the JSON schema on them.

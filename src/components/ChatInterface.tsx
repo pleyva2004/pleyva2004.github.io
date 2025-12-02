@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import type { RealtimeEvent } from '@/lib/realtime/types';
 
 
 interface Message {
@@ -207,12 +208,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { events?: RealtimeEvent[] };
 
       // Extract text response from Realtime API events
       const textResponse = data.events
-        ?.filter((e: any) => e.type === 'response.text.delta')
-        .map((e: any) => e.delta)
+        ?.filter((event) => event.type === 'response.text.delta')
+        .map((event) => event.delta ?? '')
         .join('') || "Sorry, I couldn't process that request.";
 
       console.log('Realtime API Response:', textResponse);

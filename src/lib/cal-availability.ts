@@ -1,5 +1,13 @@
 // lib/cal-availability.ts
 
+type CalSlot = { time?: string } | string;
+
+interface CalAvailabilityResponse {
+  data?: {
+    slots?: Record<string, CalSlot[]>;
+  };
+}
+
 /**
  * Get available meeting slots from Cal.com for a specific date and timezone.
  *
@@ -46,31 +54,36 @@ export async function getAvailableSlots(
       return [];
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as CalAvailabilityResponse;
     console.log("[Cal.com] Availability response:", data);
 
     // Extract time slots from the response
     // Cal.com returns slots organized by date: { "2025-12-05": [...] }
-    const slotsData = data.data?.slots || {};
+    const slotsData = data.data?.slots ?? {};
 
     // Get slots for the specific date
-    const slotsForDate = slotsData[date] || [];
+    const slotsForDate = slotsData[date] ?? [];
 
     console.log(`[Cal.com] Slots for ${date}:`, slotsForDate);
 
     // Extract just the time from each slot
-    const timeSlots = slotsForDate.map((slot: any) => {
-      // Slot might be an object with 'time' property or just a time string
-      const timeString = slot.time || slot;
-      const time = new Date(timeString);
+    const timeSlots = slotsForDate
+      .map((slot) => {
+        const timeString = typeof slot === "string" ? slot : slot.time;
+        if (!timeString) {
+          return null;
+        }
 
-      return time.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: timezone
-      });
-    });
+        const time = new Date(timeString);
+
+        return time.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: timezone
+        });
+      })
+      .filter((slot): slot is string => Boolean(slot));
 
     console.log(`[Cal.com] Found ${timeSlots.length} available slots:`, timeSlots);
 

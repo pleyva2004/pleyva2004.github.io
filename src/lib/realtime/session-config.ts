@@ -8,6 +8,14 @@ export interface SessionConfigOptions {
   systemInstructions?: string;
 }
 
+export interface SessionConfig {
+  instructions: string;
+  tools: typeof realtimeTools;
+  modalities: string[];
+  voice?: string;
+  audio_format?: string;
+}
+
 // Pablo's information for the system prompt
 const PABLO_INFO = `
 You are Pablo Leyva's AI assistant. You answer questions on Pablo's background, experience, skills, projects, education, and contact information.
@@ -66,15 +74,14 @@ If it is a long answer, write 2-3 sentences, and bullet points if more informati
  */
 export function buildSessionConfig(
   options: SessionConfigOptions
-): Record<string, any> {
+): SessionConfig {
   const { mode, systemInstructions } = options;
 
-  const base: Record<string, any> = {
-    // Add any system-level instructions you want the agent to follow
+  const base = {
     instructions:
       systemInstructions ?? PABLO_INFO,
     tools: realtimeTools
-  };
+  } satisfies Pick<SessionConfig, "instructions" | "tools">;
 
   if (mode === "text") {
     return {
