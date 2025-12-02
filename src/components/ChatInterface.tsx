@@ -17,6 +17,7 @@ interface Message {
 
 interface ChatInterfaceProps {
   onClose: () => void;
+  mode?: 'text' | 'voice';
 }
 
 const quickReplies = [
@@ -37,7 +38,7 @@ interface APIRequestBody {
   conversationHistory?: Message[];
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, mode = 'text' }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -197,7 +198,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          mode: 'text',
+          mode: mode,
           userInput: body.question,
           conversationHistory: conversationHistory
         }),

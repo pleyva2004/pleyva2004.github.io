@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import ChatInterface from './ChatInterface';
+import VoiceChatInterface from './VoiceChatInterface';
 
 const Hero: React.FC = () => {
   // Simple typewriter effect
   const [text, setText] = useState('');
   const fullText = "AI is the great equalizer. Build what you wish existed.";
-  
+
   // Chat expansion state
   const [isChatExpanded, setIsChatExpanded] = useState(false);
-  
+  const [chatMode, setChatMode] = useState<'text' | 'voice'>('text');
+
   useEffect(() => {
     let i = 0;
     const timer = setInterval(() => {
@@ -57,7 +59,7 @@ const Hero: React.FC = () => {
         </motion.div>
 
         {/* Chat Input Box */}
-        <motion.div 
+        <motion.div
           className="mt-8 sm:mt-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -66,25 +68,37 @@ const Hero: React.FC = () => {
           {!isChatExpanded && (
               <motion.div
                 layoutId="chat-container"
-                className="bg-white/5 backdrop-blur-xl rounded-xl px-6 py-4 shadow-xl cursor-pointer hover:bg-white/10 transition-all duration-200 group border border-white/10"
+                className="bg-white/5 backdrop-blur-xl rounded-xl px-6 py-4 shadow-xl hover:bg-white/10 transition-all duration-200 group border border-white/10"
                 style={{ borderRadius: "12px" }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                onClick={() => setIsChatExpanded(true)}
               >
               <div className="flex items-center justify-between space-x-4">
                 {/* Left side - Plus icon and text */}
-                <div className="flex items-center space-x-3">
-
+                <div
+                  className="flex items-center space-x-3 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChatMode('text');
+                    setIsChatExpanded(true);
+                  }}
+                >
                   <span className="text-white/90 text-sm sm:text-base group-hover:text-white transition-colors">
                     Ask me about Pablo
                   </span>
                 </div>
 
                 {/* Right side - Tools and microphone */}
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                <div
+                  className="flex items-center space-x-3"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChatMode('voice');
+                    setIsChatExpanded(true);
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors cursor-pointer">
                     <svg className="w-4 h-4 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
@@ -95,9 +109,9 @@ const Hero: React.FC = () => {
           )}
         </motion.div>
       </div>
-      
+
       {/* Scroll indicator - positioned near bottom of screen */}
-      <motion.div 
+      <motion.div
         className="absolute bottom-16 left-1/2 transform -translate-x-1/2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -107,13 +121,20 @@ const Hero: React.FC = () => {
           <div className="w-1 h-3 bg-white/60 rounded-full mt-2"></div>
         </div>
       </motion.div>
-      
+
       {/* Chat Interface */}
       <AnimatePresence>
         {isChatExpanded && (
-          <ChatInterface 
-            onClose={() => setIsChatExpanded(false)}
-          />
+          chatMode === 'voice' ? (
+            <VoiceChatInterface
+              onClose={() => setIsChatExpanded(false)}
+            />
+          ) : (
+            <ChatInterface
+              onClose={() => setIsChatExpanded(false)}
+              mode={chatMode}
+            />
+          )
         )}
       </AnimatePresence>
     </section>
