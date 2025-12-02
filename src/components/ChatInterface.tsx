@@ -25,6 +25,7 @@ const quickReplies = [
   'What skills does Pablo have?',
   'Show me Pablo\'s projects',
   'What are Pablo\'s goals?',
+  'Check Pablo\'s schedule',
 ];
 
 // We'll use Next.js API routes instead of direct backend calls
@@ -50,7 +51,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     // Load saved color from localStorage or default to brown
     return localStorage.getItem('chatUserColor') || 'brown';
   });
-  
+
   // Window state
   const [windowSize, setWindowSize] = useState({ width: 80, height: 80 }); // in vw/vh units
   const [windowPosition, setWindowPosition] = useState({ x: 10, y: 10 }); // in vw/vh units
@@ -58,7 +59,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -95,20 +96,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
   const isColorCommand = (text: string): string | null => {
     const lowerText = text.toLowerCase().trim();
-    
+
     // Direct color match
     if (colorMap[lowerText]) return colorMap[lowerText];
-    
+
     // Hex color match
     if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(lowerText)) return lowerText;
-    
+
     // Color phrase match
     const colorMatch = lowerText.match(/(?:set color to |change color to |use color |my color is |color: )(.+)/);
     if (colorMatch) {
       const colorName = colorMatch[1].trim();
       return colorMap[colorName] || (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(colorName) ? colorName : null);
     }
-    
+
     return null;
   };
 
@@ -150,7 +151,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         const newY = Math.max(0, Math.min(100 - windowSize.height, (e.clientY - dragStart.y) / window.innerHeight * 100));
         setWindowPosition({ x: newX, y: newY });
       }
-      
+
       if (isResizing) {
         const newWidth = Math.max(20, Math.min(80, (e.clientX - resizeStart.x) / window.innerWidth * 100 + windowSize.width));
         const newHeight = Math.max(20, Math.min(80, (e.clientY - resizeStart.y) / window.innerHeight * 100 + windowSize.height));
@@ -179,19 +180,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       console.log("Sending message to API");
       console.log(body.question);
       console.log("--------------------------------")
-      console.log(API_URL)  
+      console.log(API_URL)
     }
 
-
-
-
     try {
-      const response = await fetch(`${API_URL}/ask`, {
+      // Build conversation history from messages (excluding the current message)
+      const conversationHistory = messages.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      }));
+
+      // Use Realtime API with correct format
+      const response = await fetch(`${API_URL}/realtime`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          mode: 'text',
+          userInput: body.question,
+          conversationHistory: conversationHistory
+        }),
       });
 
       if (!response.ok) {
@@ -199,7 +208,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       }
 
       const data = await response.json();
-      return data.answer || "Sorry, I couldn't process that request.";
+
+      // Extract text response from Realtime API events
+      const textResponse = data.events
+        ?.filter((e: any) => e.type === 'response.text.delta')
+        .map((e: any) => e.delta)
+        .join('') || "Sorry, I couldn't process that request.";
+
+      console.log('Realtime API Response:', textResponse);
+
+      return textResponse;
     } catch (error) {
       console.error('API Error:', error);
       return "Sorry, I'm having trouble connecting right now. Please try again.";
@@ -212,10 +230,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     // Check if this is a help command
     if (text.toLowerCase().trim() === '\\help') {
       const helpText = `## SETTINGS\n- Change text color: Type a color name\n- Resize window: Drag bottom-right corner\n- Move window: Drag header\n\n## FUNCTIONS\n- Ask about Pablo's experience\n- Inquire about technical skills\n- Learn about projects\n\n## ACTIONS\n- Write an email to Pablo\n- Set up a meeting\n- Provide contact information`;
-      
-      setMessages(prev => [...prev, 
-        { id: Date.now().toString(), text, sender: 'user' },
-        { id: (Date.now() + 1).toString(), text: helpText, sender: 'bot' }
+
+      setMessages(prev => [...prev,
+      { id: Date.now().toString(), text, sender: 'user' },
+      { id: (Date.now() + 1).toString(), text: helpText, sender: 'bot' }
       ]);
       setInputText('');
       return;
@@ -223,12 +241,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
     // Check if this is a color command
     const newColor = isColorCommand(text);
-    
+
     if (newColor) {
       // Update user color and save to localStorage
       setUserColor(newColor);
       localStorage.setItem('chatUserColor', newColor);
-      
+
       // Add user message
       const userMessage: Message = {
         id: Date.now().toString(),
@@ -236,7 +254,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         sender: 'user',
       };
       setMessages(prev => [...prev, userMessage]);
-      
+
       // Add bot confirmation message
       const colorName = Object.keys(colorMap).find(key => colorMap[key] === newColor) || newColor;
       const botMessage: Message = {
@@ -270,15 +288,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         text: message.text,
         sender: message.sender
       }));
-      
-      
+
+
       const body = {
         question: text,
         history: history
-      } 
-      
+      }
+
       const response = await sendMessageToAPI(body);
-      
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: response,
@@ -379,7 +397,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                   className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} max-w-[80%]`}>
-                    <div 
+                    <div
                       className={`rounded-lg p-3 ${!isUser ? 'border border-black' : ''}`}
                       style={messageStyle}
                     >
@@ -400,7 +418,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                             code: (props) => <code className="bg-black/20 px-1 py-0.5 rounded text-xs font-mono" {...props} />,
                             pre: (props) => <pre className="bg-black/20 p-2 rounded mt-2 mb-2 text-xs font-mono overflow-x-auto" {...props} />,
                             a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline" />,
-                          }}  
+                          }}
                         >
                           {message.text}
                         </ReactMarkdown>
@@ -467,7 +485,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask me anything..."
                 className="w-full bg-white/10 backdrop-blur-sm border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 placeholder-white/60 resize-none overflow-hidden"
-                style={{ 
+                style={{
                   minHeight: '40px',
                   '--tw-ring-color': userColor + '90'
                 } as React.CSSProperties & { '--tw-ring-color': string }}
@@ -501,7 +519,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
             Press Enter to send, Shift+Enter for new line
           </p>
         </form>
-        
+
         {/* Resize Handle */}
         <div
           className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-white/20 hover:bg-white/30 transition-colors"
