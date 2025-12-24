@@ -6,6 +6,7 @@ import { FiDownload, FiCalendar, FiUser, FiBook } from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import { ResearchPaper } from '@/constants/research/research-papers';
 import PDFViewer from '@/components/PDFViewerWrapper';
+import Magnetic from './Magnetic';
 
 interface ResearchDetailProps {
   paper: ResearchPaper;
@@ -13,6 +14,11 @@ interface ResearchDetailProps {
 
 export default function ResearchDetail({ paper }: ResearchDetailProps) {
   const generatePDF = () => {
+    // ... [Previous implementation of generatePDF logic remains exactly the same, omitting for brevity in this response but implying it's kept]
+    // For this tool call, I'll paste the logic back in to be safe, or just condensed if allowed.
+    // Since I need to replace the whole file content to change the structure, I MUST include the logic.
+    // I'll grab the previous logic quickly.
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -122,8 +128,8 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
 
     const title = 'Hyper-Efficient On-Device Small Language Models for Structured Agentic Workflows';
     const titleLines = doc.splitTextToSize(title, maxWidth);
-    const totalTitleHeight = titleLines.length * 10 + 50; // rough estimate
-    yPos = (pageHeight - totalTitleHeight) / 2; // center vertically
+    const totalTitleHeight = titleLines.length * 10 + 50;
+    yPos = (pageHeight - totalTitleHeight) / 2;
 
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
@@ -178,8 +184,8 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       'Agentic focus: designing for procedural task reliability.'
     ]);
     addText('Success would demonstrate that undergraduate researchers can prototype state-of-the-art efficient LM systems with real-world applicability in domains like finance, education, or logistics.');
-    
-    yPos -= spacing.sectionBefore/3; 
+
+    yPos -= spacing.sectionBefore / 3;
     addSection('4. Methodology / Research Design', [128, 0, 128]);
     addSubsection('Model Selection & Distillation');
     addBulletList([
@@ -271,47 +277,50 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
     doc.save('Research_Proposal_Pablo_Leyva_Spaced.pdf');
   };
 
-  // If this is a completed project with a PDF, render the PDF viewer
-  if (paper.status === 'completed' && paper.pdfFileName) { 
+  // Shared Header
+  const Header = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="mb-12"
+    >
+      <h1 className="text-4xl md:text-5xl font-bold mb-6 font-display tracking-tight text-white leading-tight">
+        {paper.title}
+      </h1>
+
+      <div className="flex flex-wrap gap-6 text-gray-400 mb-6 font-mono text-sm">
+        <div className="flex items-center gap-2">
+          <FiUser className="text-blue-500" />
+          <span>{paper.author}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <FiCalendar className="text-purple-500" />
+          <span>{paper.date}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <FiBook className="text-emerald-500" />
+          <span>{paper.institution}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  if (paper.status === 'completed' && paper.pdfFileName) {
     return (
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12"
-        >
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text ">
-            {paper.title}
-          </h1>
+        <Header />
 
-          <div className="flex flex-wrap gap-6 text-gray-400 mb-6">
-            <div className="flex items-center gap-2">
-              <FiUser className="text-accent-blue" />
-              <span>{paper.author}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FiCalendar className="text-accent-purple" />
-              <span>{paper.date}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FiBook className="text-accent-green" />
-              <span>{paper.institution}</span>
-            </div>
-          </div>
-
-          <div className="bg-dark-card border border-accent-blue/20 rounded-lg p-6 mb-6">
-            <p className="text-gray-300 leading-relaxed">{paper.abstract}</p>
-          </div>
-        </motion.div>
+        <div className="bg-dark-card border border-white/10 rounded-xl p-6 mb-8 backdrop-blur-md">
+          <p className="text-gray-300 leading-relaxed">{paper.abstract}</p>
+        </div>
 
         {/* PDF Viewer with Controls */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="w-full h-[80vh]"
+          className="w-full h-[80vh] rounded-xl overflow-hidden border border-white/10 shadow-2xl"
         >
           <PDFViewer
             pdfUrl={`/research/my-papers/${paper.pdfFileName}`}
@@ -325,35 +334,17 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
   // Otherwise, render the full proposal content
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
+      <Header />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
         className="mb-12"
       >
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text ">
-          {paper.title}
-        </h1>
-
-        <div className="flex flex-wrap gap-6 text-gray-400 mb-6">
-          <div className="flex items-center gap-2">
-            <FiUser className="text-accent-blue" />
-            <span>{paper.author}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <FiCalendar className="text-accent-purple" />
-            <span>{paper.date}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <FiBook className="text-accent-green" />
-            <span>{paper.institution}</span>
-          </div>
-        </div>
-
         <button
           onClick={generatePDF}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white border-2 border-white rounded-lg transition-all duration-300 hover:bg-white hover:text-black hover:border-black"
+          className="inline-flex items-center gap-2 px-8 py-3 bg-white text-black font-bold rounded-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] hover:scale-105"
         >
           <FiDownload />
           Download PDF
@@ -362,25 +353,25 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
 
       {/* Abstract */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
         className="mb-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-accent-blue">Abstract</h2>
-        <div className="bg-dark-card border border-accent-blue/20 rounded-lg p-6">
+        <h2 className="text-2xl font-bold mb-4 text-blue-400 font-display">Abstract</h2>
+        <div className="bg-dark-card border border-blue-500/20 rounded-xl p-8 backdrop-blur-md">
           <p className="text-gray-300 leading-relaxed">{paper.abstract}</p>
         </div>
       </motion.section>
 
       {/* Introduction */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
         className="mb-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-accent-purple">1. Introduction & Background</h2>
+        <h2 className="text-2xl font-bold mb-4 text-purple-400 font-display">1. Introduction & Background</h2>
         <div className="prose prose-invert max-w-none">
           <p className="text-gray-300 leading-relaxed whitespace-pre-line">{paper.sections.introduction}</p>
         </div>
@@ -388,17 +379,17 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
 
       {/* Objectives */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
         className="mb-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-accent-green">2. Objectives / Research Questions</h2>
-        <div className="bg-dark-card border border-accent-green/20 rounded-lg p-6">
+        <h2 className="text-2xl font-bold mb-4 text-emerald-400 font-display">2. Objectives / Research Questions</h2>
+        <div className="bg-dark-card border border-emerald-500/20 rounded-xl p-8 backdrop-blur-md">
           <ul className="space-y-3 text-gray-300">
             {paper.sections.objectives.map((objective, idx) => (
               <li key={idx} className="flex items-start gap-3">
-                <span className="text-accent-green mt-1">{idx + 1}.</span>
+                <span className="text-emerald-500 mt-1 font-mono">0{idx + 1}.</span>
                 <span>{objective}</span>
               </li>
             ))}
@@ -408,18 +399,18 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
 
       {/* Significance */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
         className="mb-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-accent-blue">3. Significance & Innovation</h2>
+        <h2 className="text-2xl font-bold mb-4 text-blue-400 font-display">3. Significance & Innovation</h2>
         <div className="prose prose-invert max-w-none">
           <p className="text-gray-300 leading-relaxed mb-4">{paper.sections.significance.content}</p>
-          <ul className="space-y-3 text-gray-300">
+          <ul className="space-y-3 text-gray-300 bg-white/5 p-6 rounded-xl">
             {paper.sections.significance.innovations.map((innovation, idx) => (
               <li key={idx} className="flex items-start gap-3">
-                <span className="text-accent-blue">•</span>
+                <span className="text-blue-400">•</span>
                 <span dangerouslySetInnerHTML={{ __html: innovation }} />
               </li>
             ))}
@@ -429,20 +420,20 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
 
       {/* Methodology */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.5 }}
         className="mb-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-accent-purple">4. Methodology / Research Design</h2>
-        <div className="space-y-6">
-          {Object.entries(paper.sections.methodology).map(([key, values]) => (
-            <div key={key}>
-              <h3 className="text-xl font-semibold mb-3 text-gray-200">{key}</h3>
-              <ul className="space-y-2 text-gray-300">
+        <h2 className="text-2xl font-bold mb-6 text-purple-400 font-display">4. Methodology / Research Design</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Object.entries(paper.sections.methodology).map(([key, values], idx) => (
+            <div key={key} className="bg-dark-card border border-white/5 rounded-xl p-6">
+              <h3 className="text-lg font-bold mb-3 text-white font-display border-b border-white/10 pb-2">{key}</h3>
+              <ul className="space-y-2 text-gray-400 text-sm">
                 {values.map((value, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-accent-purple">•</span>
+                    <span className="text-purple-500">•</span>
                     <span>{value}</span>
                   </li>
                 ))}
@@ -454,33 +445,33 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
 
       {/* Expected Results */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
         className="mb-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-accent-green">5. Expected Results / Outcomes</h2>
+        <h2 className="text-2xl font-bold mb-4 text-emerald-400 font-display">5. Expected Results / Outcomes</h2>
         <div className="prose prose-invert max-w-none">
           <ul className="space-y-3 text-gray-300 mb-6">
             {paper.sections.expectedResults.outcomes.map((outcome, idx) => (
               <li key={idx} className="flex items-start gap-3">
-                <span className="text-accent-green">•</span>
+                <span className="text-emerald-500">•</span>
                 <span>{outcome}</span>
               </li>
             ))}
           </ul>
-          <div className="bg-dark-bg/50 border border-accent-green/20 rounded-lg p-4">
-            <h4 className="text-lg font-semibold text-accent-green mb-3">Potential Challenges / Limitations</h4>
+          <div className="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-emerald-400 mb-3 font-display">Potential Challenges / Limitations</h4>
             <ul className="space-y-2 text-gray-300">
               {paper.sections.expectedResults.challenges.map((challenge, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <span className="text-accent-green text-xs mt-1">▪</span>
+                  <span className="text-emerald-500/70 text-xs mt-1">▪</span>
                   <span>{challenge}</span>
                 </li>
               ))}
             </ul>
-            <p className="text-gray-400 text-sm mt-3">
-              <strong>Mitigation:</strong> {paper.sections.expectedResults.mitigation}
+            <p className="text-gray-400 text-sm mt-4 pt-4 border-t border-white/5">
+              <strong className="text-emerald-400">Mitigation:</strong> {paper.sections.expectedResults.mitigation}
             </p>
           </div>
         </div>
@@ -488,39 +479,47 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
 
       {/* Timeline */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.7 }}
         className="mb-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-accent-blue">6. Timeline (Semester)</h2>
-        <div className="bg-dark-card border border-accent-blue/20 rounded-lg p-6">
-          <div className="space-y-4">
-            {paper.sections.timeline.map((item, idx) => (
-              <div key={idx} className="flex gap-4">
-                <div className={`font-semibold min-w-[120px] ${idx % 3 === 0 ? 'text-accent-blue' : idx % 3 === 1 ? 'text-accent-purple' : 'text-accent-green'}`}>
-                  {item.phase}
+        <h2 className="text-2xl font-bold mb-4 text-blue-400 font-display">6. Timeline (Semester)</h2>
+        <div className="bg-dark-card border border-blue-500/20 rounded-xl p-8 backdrop-blur-md">
+          <div className="flex flex-col relative">
+            {/* Timeline Line */}
+            <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-white/10" />
+
+            <div className="space-y-8">
+              {paper.sections.timeline.map((item, idx) => (
+                <div key={idx} className="flex gap-6 relative">
+                  <div className={`w-4 h-4 rounded-full mt-1 shrink-0 z-10 ${idx % 3 === 0 ? 'bg-blue-500' : idx % 3 === 1 ? 'bg-purple-500' : 'bg-emerald-500'}`} />
+                  <div className="flex flex-col">
+                    <span className={`font-bold font-mono text-sm ${idx % 3 === 0 ? 'text-blue-400' : idx % 3 === 1 ? 'text-purple-400' : 'text-emerald-400'}`}>
+                      {item.phase}
+                    </span>
+                    <span className="text-gray-300 mt-1">{item.description}</span>
+                  </div>
                 </div>
-                <div className="text-gray-300">{item.description}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </motion.section>
 
       {/* References */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
         className="mb-12"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-accent-purple">References / Bibliography</h2>
-        <div className="prose prose-invert max-w-none">
-          <ol className="list-decimal list-inside space-y-3 text-gray-300">
+        <h2 className="text-2xl font-bold mb-4 text-purple-400 font-display">References / Bibliography</h2>
+        <div className="prose prose-invert max-w-none bg-black/20 p-6 rounded-xl">
+          <ol className="list-decimal list-inside space-y-3 text-gray-300 font-mono text-sm">
             {paper.sections.references.map((ref, idx) => (
               <li key={idx}>
-                <a href={ref.url} target="_blank" rel="noopener noreferrer" className="text-accent-blue hover:text-accent-blue/80 underline">
+                <a href={ref.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-white transition-colors underline decoration-blue-500/30 underline-offset-4">
                   {ref.title}
                 </a>
               </li>

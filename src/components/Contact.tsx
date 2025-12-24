@@ -1,175 +1,143 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Github, Linkedin, Mail, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Github, Linkedin, Mail, ChevronUp, MapPin, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 const Contact: React.FC = () => {
-  const [formData, setFormData] = useState({
-    subject: '',
-    email: '',
-    message: ''
-  });
+  const currentYear = new Date().getFullYear();
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-    // Create mailto URL with form data
-    const mailtoUrl = `mailto:pleyva2004@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
-      `${formData.message}`
-    )}`;
-
-    // Open user's email client
-    window.location.href = mailtoUrl;
-
-    // Reset form after sending
-    setFormData({ subject: '', email: '', message: '' });
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <section id="contact" className="py-32 px-6 bg-dark-bg">
+    <footer id="contact" className="py-12 px-6 bg-dark-card border-t border-white/10 relative">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-4xl font-bold text-white mb-4">Get in Touch</h2>
-          <p className="text-gray-400 text-lg">
-            Feel free to reach out for collaborations or just a friendly chat
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 gap-12">
-          {/* Left side - Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="mb-8">
-              <h3 className="text-2xl font-semibold text-white mb-6">Connect With Me</h3>
-              <div className="space-y-4">
-                <a 
-                  href="https://github.com/pleyva2004" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
-                >
-                  <Github size={20} className="mr-3" />
-                  <span>GitHub</span>
-                </a>
-                <a 
-                  href="https://www.linkedin.com/in/pablo-leyva" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
-                >
-                  <Linkedin size={20} className="mr-3" />
-                  <span>LinkedIn</span>
-                </a>
-                <a 
-                  href="mailto:pleyva2004@gmail.com"
-                  className="flex items-center text-gray-300 hover:text-white transition-colors group"
-                >
-                  <Mail size={20} className="mr-3" />
-                  <span>pleyva2004@gmail.com</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Location */}
-            <div>
-              <h3 className="text-2xl font-semibold text-white mb-6">Location</h3>
-              <div className="flex items-center text-gray-300">
-                <MapPin size={20} className="mr-3" />
-                <span>New York City • San Francisco</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right side - Message Form */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <h3 className="text-2xl font-semibold text-white mb-6">Send a Message</h3>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Subject Input */}
-              <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors"
-                  placeholder="Subject line"
-                  required
-                />
-              </div>
-
-              {/* Email Input */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Your Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors"
-                  placeholder="your@email.com"
-                  required
-                />
-              </div>
-
-              {/* Message Textarea */}
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  rows={5}
-                  className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors resize-none"
-                  placeholder="Your message..."
-                  required
-                />
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-dark-bg"
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          {/* Left - Social Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Connect</h3>
+            <div className="space-y-3">
+              <a
+                href="https://github.com/pleyva2004"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-gray-400 hover:text-white transition-colors group"
               >
-                Open Email Client
+                <Github size={16} className="mr-2" />
+                <span>GitHub</span>
+              </a>
+              <a
+                href="https://www.linkedin.com/in/pablo-leyva"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-gray-400 hover:text-white transition-colors group"
+              >
+                <Linkedin size={16} className="mr-2" />
+                <span>LinkedIn</span>
+              </a>
+              <a
+                href="mailto:pleyva2004@gmail.com"
+                className="flex items-center text-gray-400 hover:text-white transition-colors group"
+              >
+                <Mail size={16} className="mr-2" />
+                <span>Email</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Middle-Right - Ventures */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Ventures</h3>
+            <div className="space-y-3">
+              <a
+                href="https://levroklabs.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-gray-400 hover:text-white transition-colors"
+              >
+                Levrok Labs
+              </a>
+              <a
+                href="https://levroklabs.dev/insights"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-gray-400 hover:text-white transition-colors"
+              >
+                Insights
+              </a>
+            </div>
+          </div>
+
+          {/* Right - Research */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Deep Dive</h3>
+            <div className="space-y-3">
+              <Link
+                href="/research"
+                className="block text-gray-400 hover:text-white transition-colors"
+              >
+                Research
+              </Link>
+            </div>
+          </div>
+
+          {/* Far Right - About Me */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Beyond the Resume</h3>
+            <div className="space-y-3">
+              <a
+                href="https://drive.google.com/file/d/1zAga2AMGiT4DQ2FaZ2P4oiwJUAaTAMR5/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-gray-400 hover:text-white transition-colors group"
+              >
+                <FileText size={16} className="mr-2" />
+                <span>Resume</span>
+              </a>
+              <a
+                href="#"
+                className="block text-gray-400 hover:text-white transition-colors cursor-not-allowed"
+                onClick={(e) => e.preventDefault()}
+              >
+                About Me
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Copyright and Location */}
+        <div className="pt-8 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center text-gray-500 text-sm">
+              <MapPin size={14} className="mr-1" />
+              <span>NYC • SF</span>
+            </div>
+            <p className="text-gray-500 text-sm">
+              © {currentYear} Pablo Leyva
+            </p>
+            {showBackToTop && (
+              <button
+                onClick={scrollToTop}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white transition-colors"
+                aria-label="Back to top"
+              >
+                <ChevronUp size={20} />
               </button>
-            </form>
-          </motion.div>
+            )}
+          </div>
         </div>
       </div>
-    </section>
+    </footer>
   );
 };
 

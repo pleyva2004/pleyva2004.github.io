@@ -16,8 +16,8 @@ export default function Home() {
   const [isChatVisible, setIsChatVisible] = useState(false);
 
   return (
-    <div className="min-h-screen bg-dark-bg">
-      <Sidebar 
+    <div className="min-h-screen text-foreground">
+      <Sidebar
         onNetworkToggle={() => setIsNetworkVisible(true)}
         onChatToggle={() => setIsChatVisible(true)}
       />
@@ -27,13 +27,13 @@ export default function Home() {
         <Timeline />
         <Contact />
       </main>
-      <WorkInProgress 
+      <WorkInProgress
         isVisible={isNetworkVisible}
         onClose={() => setIsNetworkVisible(false)}
       />
       <AnimatePresence>
         {isChatVisible && (
-          <ChatInterface 
+          <ChatInterface
             onClose={() => setIsChatVisible(false)}
           />
         )}

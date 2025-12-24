@@ -49,13 +49,13 @@ export default function ReadingViewPage() {
 
   if (!paper) {
     return (
-      <div className="h-screen bg-dark-bg text-white flex items-center justify-center">
+      <div className="h-screen text-foreground flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4 text-accent-blue">Paper Not Found</h1>
+          <h1 className="text-4xl font-bold mb-4 font-display text-blue-500">Paper Not Found</h1>
           <p className="text-gray-400 mb-8">The paper you&apos;re looking for doesn&apos;t exist.</p>
           <Link
             href="/research"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/80 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors backdrop-blur-md border border-white/5"
           >
             <FiArrowLeft />
             Back to Research
@@ -69,13 +69,13 @@ export default function ReadingViewPage() {
   const notesUrl = paper.notesFileName ? `/research/notes/${paper.notesFileName}` : '';
 
   return (
-    <div className="h-screen bg-dark-bg text-white">
+    <div className="h-screen text-foreground flex flex-col">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-bg/80 backdrop-blur-md border-b border-accent-blue/20">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-card/90 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-full px-6 py-4">
           <Link
             href="/research"
-            className="inline-flex items-center gap-2 text-accent-blue hover:text-accent-blue/80 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
             <FiArrowLeft /> Back to Research
           </Link>
@@ -90,24 +90,24 @@ export default function ReadingViewPage() {
           transition={{ duration: 0.6 }}
           className="max-w-full"
         >
-          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2 font-display text-white">
             {paper.title}
           </h1>
-          <p className="text-sm md:text-base text-gray-400">
+          <p className="text-sm md:text-base text-gray-500 font-mono">
             {paper.authors} ({paper.year})
           </p>
         </motion.div>
       </div>
 
       {/* Main Content - Side by Side View */}
-      <main className="p-4 md:p-6 pb-48 md:pb-56">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+      <main className="p-4 md:p-6 pb-48 md:pb-56 flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 h-full">
           {/* Left Panel - PDF (2/3 width) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="lg:col-span-2 h-[60vh] md:h-[70vh] lg:h-[75vh]"
+            className="lg:col-span-2 h-full rounded-xl overflow-hidden border border-white/10 shadow-xl"
           >
             <PDFViewer pdfUrl={pdfUrl} title={paper.title} />
           </motion.div>
@@ -117,17 +117,20 @@ export default function ReadingViewPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="lg:col-span-1 h-[60vh] md:h-[70vh] lg:h-[75vh]"
+            className="lg:col-span-1 h-full"
           >
             {notesUrl ? (
               <MarkdownNotesPanel notesUrl={notesUrl} title={paper.title} />
             ) : (
-              <div className="flex flex-col h-full bg-dark-card border border-accent-purple/20 rounded-lg overflow-hidden">
-                <div className="p-4 border-b border-accent-purple/20 bg-dark-bg">
-                  <h3 className="text-lg font-semibold text-accent-purple">My Notes</h3>
+              <div className="flex flex-col h-full bg-dark-card border border-white/10 rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-white/10 bg-dark-card/50">
+                  <h3 className="text-lg font-bold text-white font-display">My Notes</h3>
                 </div>
                 <div className="flex items-center justify-center h-full p-8">
-                  <p className="text-gray-400 text-center">Currently taking notes...</p>
+                  <div className="text-center">
+                    <p className="text-gray-500 mb-2">No notes available yet</p>
+                    <p className="text-xs text-gray-600 font-mono">Currently taking notes...</p>
+                  </div>
                 </div>
               </div>
             )}

@@ -34,13 +34,13 @@ export default function ResearchDashboard() {
   }, [filteredPapers, filter, setPageContext]);
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white">
+    <div className="min-h-screen text-foreground">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-bg/80 backdrop-blur-md border-b border-accent-blue/20">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-card border-b border-white/10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-accent-blue hover:text-accent-blue/80 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
             <FiArrowLeft /> Back to Home
           </Link>
@@ -58,43 +58,42 @@ export default function ResearchDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-accent-blue to-accent-purple bg-clip-text text-transparent">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 font-display tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60">
                 Research
               </h1>
-              <p className="text-gray-400 text-base md:text-lg mb-6">
+              <p className="text-gray-400 text-base md:text-lg mb-8 font-light">
                 Explore my research projects and academic work
               </p>
 
               {/* Filter Tabs */}
-              <div className="flex gap-2 md:gap-4 border-b border-accent-blue/20 pb-4 overflow-x-auto">
+              <div className="flex gap-2 md:gap-4 border-b border-white/10 pb-4 overflow-x-auto">
                 <button
                   onClick={() => setFilter('all')}
-                  className={`px-3 md:px-4 py-2 font-semibold transition-all whitespace-nowrap ${
-                    filter === 'all'
-                      ? 'text-accent-blue border-b-2 border-accent-blue'
-                      : 'text-gray-400 hover:text-gray-200'
-                  }`}
+                  className={`px-4 py-2 text-sm font-semibold transition-all rounded-full whitespace-nowrap ${filter === 'all'
+                      ? 'bg-white text-black'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
                 >
                   All
                 </button>
                 <button
                   onClick={() => setFilter('ongoing')}
-                  className={`px-3 md:px-4 py-2 font-semibold transition-all whitespace-nowrap ${
-                    filter === 'ongoing'
-                      ? 'text-accent-blue border-b-2 border-accent-blue'
-                      : 'text-gray-400 hover:text-gray-200'
-                  }`}
+                  className={`px-4 py-2 text-sm font-semibold transition-all rounded-full whitespace-nowrap flex items-center gap-2 ${filter === 'ongoing'
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20'
+                      : 'text-gray-400 hover:text-blue-400 hover:bg-blue-500/10'
+                    }`}
                 >
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                   Ongoing
                 </button>
                 <button
                   onClick={() => setFilter('completed')}
-                  className={`px-3 md:px-4 py-2 font-semibold transition-all whitespace-nowrap ${
-                    filter === 'completed'
-                      ? 'text-accent-green border-b-2 border-accent-green'
-                      : 'text-gray-400 hover:text-gray-200'
-                  }`}
+                  className={`px-4 py-2 text-sm font-semibold transition-all rounded-full whitespace-nowrap flex items-center gap-2 ${filter === 'completed'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
+                      : 'text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10'
+                    }`}
                 >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                   Completed
                 </button>
               </div>
@@ -108,7 +107,7 @@ export default function ResearchDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
               >
                 {filteredPapers.length > 0 ? (
                   filteredPapers.map((paper, index) => (
@@ -119,9 +118,12 @@ export default function ResearchDashboard() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6 }}
-                    className="col-span-full text-center py-16 text-gray-400"
+                    className="col-span-full py-24 text-center"
                   >
-                    <p className="text-xl">No {filter} research projects yet.</p>
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                      <FiArrowLeft className="text-gray-500 text-2xl" />
+                    </div>
+                    <p className="text-gray-400 text-lg">No {filter} research projects yet.</p>
                   </motion.div>
                 )}
               </motion.div>
@@ -134,7 +136,7 @@ export default function ResearchDashboard() {
           </div>
         </div>
       </main>
-    
+
       <ChatInput />
     </div>
   );

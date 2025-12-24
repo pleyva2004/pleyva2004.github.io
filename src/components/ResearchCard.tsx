@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { FiFileText, FiArrowRight } from 'react-icons/fi';
 import Link from 'next/link';
 import { ResearchPaper } from '@/constants/research/research-papers';
+import TiltCard from './TiltCard';
 
 interface ResearchCardProps {
   paper: ResearchPaper;
@@ -13,13 +14,13 @@ interface ResearchCardProps {
 
 export default function ResearchCard({ paper, index }: ResearchCardProps) {
   const statusColors = {
-    ongoing: 'border-accent-blue/40 bg-accent-blue/5',
-    completed: 'border-accent-green/40 bg-accent-green/5'
+    ongoing: 'border-blue-500/40 bg-blue-500/5',
+    completed: 'border-emerald-500/40 bg-emerald-500/5'
   };
 
   const badgeColors = {
-    ongoing: 'bg-accent-blue/20 text-accent-blue border-accent-blue/40',
-    completed: 'bg-accent-green/20 text-accent-green border-accent-green/40'
+    ongoing: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+    completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
   };
 
   return (
@@ -29,45 +30,44 @@ export default function ResearchCard({ paper, index }: ResearchCardProps) {
       transition={{ duration: 0.5, delay: index * 0.1 }}
     >
       <Link href={`/research/${paper.id}`}>
-        <div
-          className={`group relative border-2 rounded-lg p-3 aspect-square flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl cursor-pointer ${statusColors[paper.status]}`}
-        >
-          <div>
-            {/* Status Badge */}
-            <div className="flex items-center justify-between mb-2">
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${badgeColors[paper.status]}`}
-              >
-                {paper.status}
-              </span>
-              {paper.status === 'completed' && paper.pdfFileName && (
-                <FiFileText className="text-accent-green" size={14} />
-              )}
+        <TiltCard className="h-full">
+          <div
+            className={`h-full border rounded-xl p-5 flex flex-col justify-between backdrop-blur-md shadow-lg ${statusColors[paper.status]} hover:border-white/20 transition-colors`}
+          >
+            <div>
+              {/* Status Badge */}
+              <div className="flex items-center justify-between mb-4">
+                <span
+                  className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${badgeColors[paper.status]}`}
+                >
+                  {paper.status}
+                </span>
+                {paper.status === 'completed' && paper.pdfFileName && (
+                  <FiFileText className="text-emerald-400" size={16} />
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 className="text-lg font-bold mb-3 text-white font-display leading-tight group-hover:text-blue-400 transition-colors line-clamp-3">
+                {paper.title}
+              </h3>
             </div>
 
-            {/* Title */}
-            <h3 className="text-sm font-bold mb-2 text-white group-hover:text-accent-blue transition-colors line-clamp-4">
-              {paper.title}
-            </h3>
+            {/* Meta Info at bottom */}
+            <div className="space-y-3 pt-4 border-t border-white/5">
+              <div className="text-xs text-gray-400 font-mono">
+                <div className="mb-1">{paper.date}</div>
+                <div className="line-clamp-1">{paper.institution}</div>
+              </div>
+
+              {/* Read More Link */}
+              <div className="flex items-center gap-2 text-blue-400 group-hover:text-purple-400 transition-colors">
+                <span className="font-semibold text-xs tracking-wide">View details</span>
+                <FiArrowRight className="group-hover:translate-x-1 transition-transform" size={14} />
+              </div>
+            </div>
           </div>
-
-          {/* Meta Info at bottom */}
-          <div className="space-y-1.5">
-            <div className="text-[10px] text-gray-400">
-              <div>{paper.date}</div>
-              <div className="line-clamp-1">{paper.institution}</div>
-            </div>
-
-            {/* Read More Link */}
-            <div className="flex items-center gap-1.5 text-accent-blue group-hover:text-accent-purple transition-colors">
-              <span className="font-semibold text-[10px]">View details</span>
-              <FiArrowRight className="group-hover:translate-x-1 transition-transform" size={12} />
-            </div>
-          </div>
-
-          {/* Gradient Border Glow Effect */}
-          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-accent-blue/0 via-accent-purple/0 to-accent-blue/0 group-hover:from-accent-blue/20 group-hover:via-accent-purple/20 group-hover:to-accent-blue/20 transition-all duration-300 pointer-events-none" />
-        </div>
+        </TiltCard>
       </Link>
     </motion.div>
   );

@@ -12,9 +12,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNetworkToggle, onChatToggle }) => {
     <>
       {/* Desktop Sidebar - Fixed left position */}
       <div className="hidden md:block fixed left-6 top-1/2 transform -translate-y-1/2 z-40">
-        <div className="bg-black/80 backdrop-blur-sm rounded-full p-3 space-y-4 border border-gray-800">
+        <div className="bg-dark-card rounded-full p-3 space-y-4 border border-gray-800">
           {/* Home Button */}
-          <button 
+          <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-100 transition-colors"
           >
@@ -44,21 +44,21 @@ const Sidebar: React.FC<SidebarProps> = ({ onNetworkToggle, onChatToggle }) => {
           >
             <FileText size={20} />
           </Link>
-          
+
         </div>
       </div>
 
       {/* Mobile Sidebar - Below header, top right */}
       <div className="md:hidden fixed top-20 right-4 z-50">
-        <div className="bg-black/80 backdrop-blur-sm rounded-full p-2 flex space-x-2 border border-gray-800">
+        <div className="bg-dark-card rounded-full p-2 flex space-x-2 border border-gray-800">
           {/* Home Button */}
-          <button 
+          <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-100 transition-colors"
           >
             <Home size={18} />
           </button>
-          
+
           {/* Share/Network Button */}
           <button
             onClick={onNetworkToggle}
