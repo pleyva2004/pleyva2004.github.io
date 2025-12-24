@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronDown, Check, Cpu, Zap, Brain } from 'lucide-react';
+import { ChevronDown, Check, Cpu, Zap, Brain, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AVAILABLE_MODELS, type ModelTier } from '@/lib/webllm/types';
 
@@ -29,7 +29,27 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const currentModel = AVAILABLE_MODELS.find(m => m.id === currentModelId);
+  // Combine local models with GPT-4o
+  const allModels = [
+    ...AVAILABLE_MODELS,
+    {
+      id: 'gpt-4o',
+      name: 'GPT-4o (Cloud)',
+      size: 'Serverless',
+      tier: 'cloud' as ModelTier, // Cast to satisfy TS, we handle the icon below
+      minVRAM: 0,
+      contextWindow: 128000
+    }
+  ];
+
+  const currentModel = allModels.find(m => m.id === currentModelId);
+
+  const getModelIcon = (tier: string) => {
+    if (tier === 'cloud') return Sparkles;
+    return tierIcons[tier as ModelTier] || Zap;
+  };
+
+  const CurrentIcon = currentModel ? getModelIcon(currentModel.tier) : Zap;
 
   return (
     <div className="relative">
@@ -46,7 +66,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
         {isLoading ? (
           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         ) : (
-          currentModel && React.createElement(tierIcons[currentModel.tier], { size: 14 })
+          <CurrentIcon size={14} />
         )}
         <span>{currentModel?.name || 'Select Model'}</span>
         <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -60,8 +80,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             exit={{ opacity: 0, y: -10 }}
             className="absolute top-full mt-2 left-0 w-64 bg-gray-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden"
           >
-            {AVAILABLE_MODELS.map(model => {
-              const Icon = tierIcons[model.tier];
+            {allModels.map(model => {
+              const Icon = getModelIcon(model.tier);
               const isSelected = model.id === currentModelId;
               const isRecommended = model.id === recommendedModelId;
 
@@ -89,7 +109,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                       )}
                     </div>
                     <p className="text-white/50 text-xs mt-0.5">
-                      {model.size} • {model.minVRAM}GB VRAM min
+                      {model.size} • {model.minVRAM === 0 ? 'No VRAM required' : `${model.minVRAM}GB VRAM min`}
                     </p>
                   </div>
                   {isSelected && <Check size={16} className="text-green-400 mt-0.5" />}

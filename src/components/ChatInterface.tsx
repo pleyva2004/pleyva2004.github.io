@@ -56,7 +56,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
   // ============ BACKEND SELECTION ============
   const [chatMode, setChatMode] = useState<ChatMode>('text');
-  const [chatBackend, setChatBackend] = useState<ChatBackend>('webllm');
+  const [chatBackend, setChatBackend] = useState<ChatBackend>(() => {
+    if (typeof window !== 'undefined') {
+      const savedModelId = localStorage.getItem('selectedModelId');
+      return savedModelId === 'gpt-4o' ? 'openai' : 'webllm';
+    }
+    return 'webllm';
+  });
 
   // ============ WEBLLM HOOK ============
   const {
@@ -83,9 +89,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // ============ OPENAI CONNECTION (for voice mode) ============
+  // ============ OPENAI CONNECTION (for voice mode or cloud backend) ============
   const connectToOpenAI = useCallback(async () => {
-    if (wsRef.current) return;
+    // If already connected or connecting, skip
+    if (wsRef.current && wsRef.current.readyState <= 1) return;
 
     try {
       console.log("[Chat] Requesting ephemeral token...");
@@ -108,7 +115,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
       ws.onopen = () => {
         console.log("[Chat] WebSocket connected");
-        const config = buildSessionConfig({ mode: chatMode });
+        // Always set to text mode settings for cloud text chat, override if voice is active
+        const config = buildSessionConfig({ mode: chatMode === 'voice' ? 'voice' : 'text' });
         ws.send(JSON.stringify({
           type: 'session.update',
           session: config
@@ -137,6 +145,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       console.error("[Chat] Connection failed:", err);
     }
   }, [chatMode]);
+
+  const disconnectFromOpenAI = useCallback(() => {
+    if (wsRef.current) {
+      console.log("[Chat] Disconnecting from OpenAI...");
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+  }, []);
 
   const handleRealtimeEvent = async (event: RealtimeEvent) => {
     switch (event.type) {
@@ -200,34 +216,52 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     const init = async () => {
       if (!hardware) return;
 
+      // Check for saved model preference
+      const savedModelId = typeof window !== 'undefined'
+        ? localStorage.getItem('selectedModelId')
+        : null;
+
+      // If GPT-4o was previously selected, connect to OpenAI
+      if (savedModelId === 'gpt-4o') {
+        console.log('[Chat] Restoring GPT-4o backend from localStorage');
+        setChatBackend('openai');
+        return; // WebSocket connection will be established by the backend effect
+      }
+
       if (!hardware.webgpuSupported) {
         // No WebGPU - fall back to OpenAI for everything
         console.log('[Chat] WebGPU not supported, using OpenAI backend');
         setChatBackend('openai');
-        connectToOpenAI();
+        localStorage.setItem('selectedModelId', 'gpt-4o');
         return;
       }
 
-      // WebGPU available - preload recommended model
-      console.log('[Chat] WebGPU supported, preloading model:', hardware.recommendedModelId);
+      // Use saved model ID or fall back to recommended
+      const modelToLoad = savedModelId && savedModelId !== 'gpt-4o'
+        ? savedModelId
+        : hardware.recommendedModelId;
+
+      console.log('[Chat] WebGPU supported, preloading model:', modelToLoad);
       try {
-        await initializeWebLLM(hardware.recommendedModelId);
+        await initializeWebLLM(modelToLoad);
       } catch (err) {
         console.error('[Chat] WebLLM init failed, falling back to OpenAI:', err);
         setChatBackend('openai');
-        connectToOpenAI();
+        localStorage.setItem('selectedModelId', 'gpt-4o');
       }
     };
 
     init();
   }, [hardware, initializeWebLLM, connectToOpenAI]);
 
-  // Connect to OpenAI when switching to voice mode
+  // Manage WebSocket connection based on backend
   useEffect(() => {
-    if (chatMode === 'voice' && !wsRef.current) {
+    if (chatBackend === 'openai' || chatMode === 'voice') {
       connectToOpenAI();
+    } else {
+      disconnectFromOpenAI();
     }
-  }, [chatMode, connectToOpenAI]);
+  }, [chatBackend, chatMode, connectToOpenAI, disconnectFromOpenAI]);
 
   // ============ HELPER FUNCTIONS ============
   const scrollToBottom = () => {
@@ -402,8 +436,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     if (text.toLowerCase().trim() === '\\help') {
       const helpText = `## SETTINGS\n- Change text color: Type a color name\n- Resize window: Drag bottom-right corner\n- Move window: Drag header\n- Switch AI model: Use selector in header\n\n## FUNCTIONS\n- Ask about Pablo's experience\n- Inquire about technical skills\n- Learn about projects\n\n## ACTIONS\n- Write an email to Pablo\n- Set up a meeting\n- Provide contact information`;
       setMessages(prev => [...prev,
-        { id: Date.now().toString(), text, sender: 'user' },
-        { id: (Date.now() + 1).toString(), text: helpText, sender: 'bot' }
+      { id: Date.now().toString(), text, sender: 'user' },
+      { id: (Date.now() + 1).toString(), text: helpText, sender: 'bot' }
       ]);
       setInputText('');
       return;
@@ -416,8 +450,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       localStorage.setItem('chatUserColor', newColor);
       const colorName = Object.keys(colorMap).find(key => colorMap[key] === newColor) || newColor;
       setMessages(prev => [...prev,
-        { id: Date.now().toString(), text, sender: 'user' },
-        { id: (Date.now() + 1).toString(), text: `Great! I've set your message color to ${colorName}.`, sender: 'bot' }
+      { id: Date.now().toString(), text, sender: 'user' },
+      { id: (Date.now() + 1).toString(), text: `Great! I've set your message color to ${colorName}.`, sender: 'bot' }
       ]);
       setInputText('');
       return;
@@ -435,7 +469,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
   // ============ MODEL SELECTION ============
   const handleModelSwitch = async (modelId: string) => {
-    if (modelId === currentModelId) return;
+    // Save selection to localStorage
+    localStorage.setItem('selectedModelId', modelId);
+
+    // Handle GPT-4o selection
+    if (modelId === 'gpt-4o') {
+      if (chatBackend !== 'openai') {
+        setChatBackend('openai');
+      }
+      return;
+    }
+
+    // Handle Local Model selection
+    if (chatBackend === 'openai') {
+      setChatBackend('webllm');
+    }
+
+    if (modelId === currentModelId && chatBackend === 'webllm') return;
     try {
       await switchModelTo(modelId);
     } catch (err) {
@@ -539,7 +589,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
               <p className="text-white/60 text-xs">
                 {chatBackend === 'webllm'
                   ? `Local AI • ${currentModel?.name || 'Loading...'}`
-                  : 'Cloud AI • OpenAI'
+                  : `Cloud AI • ${chatMode === 'voice' ? 'OpenAI Voice' : 'GPT-4o'}`
                 }
               </p>
             </div>
@@ -549,20 +599,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
             {/* Mode Toggle */}
             <button
               onClick={handleModeToggle}
-              className={`p-2 rounded-lg transition-colors ${
-                chatMode === 'voice'
-                  ? 'bg-blue-500/20 text-blue-400'
-                  : 'bg-white/10 text-white/60 hover:text-white'
-              }`}
-              title={chatMode === 'voice' ? 'Voice Mode (OpenAI)' : 'Text Mode (Local)'}
+              className={`p-2 rounded-lg transition-colors ${chatMode === 'voice'
+                ? 'bg-blue-500/20 text-blue-400'
+                : 'bg-white/10 text-white/60 hover:text-white'
+                }`}
+              title={chatMode === 'voice' ? 'Switch to Text Mode' : 'Switch to Voice Mode'}
             >
-              {chatMode === 'voice' ? <Mic size={16} /> : <MessageSquare size={16} />}
+              {chatMode === 'voice' ? <MessageSquare size={16} /> : <Mic size={16} />}
             </button>
 
-            {/* Model Selector (only for WebLLM text mode) */}
-            {chatBackend === 'webllm' && chatMode === 'text' && (
+            {/* Model Selector (only for text mode) */}
+            {chatMode === 'text' && (
               <ModelSelector
-                currentModelId={currentModelId}
+                currentModelId={chatBackend === 'openai' ? 'gpt-4o' : currentModelId}
                 recommendedModelId={hardware?.recommendedModelId || null}
                 onSelectModel={handleModelSwitch}
                 disabled={engineState.status === 'loading' || engineState.status === 'switching'}
