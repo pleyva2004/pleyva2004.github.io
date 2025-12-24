@@ -42,7 +42,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
   const [userColor, setUserColor] = useState<string>(() => {
     // Load saved color from localStorage or default to brown
     return localStorage.getItem('chatUserColor') || 'brown';
@@ -51,9 +50,36 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
   const wsRef = useRef<WebSocket | null>(null);
   const currentResponseIdRef = useRef<string | null>(null);
 
+  // Helper function to wait for WebSocket connection
+  const waitForConnection = (timeoutMs: number = 5000): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      // Already connected
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        resolve();
+        return;
+      }
+
+      const checkInterval = setInterval(() => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          clearInterval(checkInterval);
+          clearTimeout(timeout);
+          resolve();
+        }
+      }, 100);
+
+      const timeout = setTimeout(() => {
+        clearInterval(checkInterval);
+        reject(new Error("Connection timeout"));
+      }, timeoutMs);
+    });
+  };
+
   // Initialize Realtime WebSocket
   useEffect(() => {
+    // Prevent multiple connections
     if (wsRef.current) return;
+
+    let isMounted = true;
 
     const connect = async () => {
       try {
@@ -63,6 +89,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
 
         const data = await tokenRes.json();
         const secret = data.client_secret.value;
+
+        if (!isMounted) return;
 
         console.log("[Chat] Connecting to OpenAI Realtime...");
         const ws = new WebSocket(
@@ -76,8 +104,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         wsRef.current = ws;
 
         ws.onopen = () => {
+          if (!isMounted) {
+              ws.close();
+              return;
+          }
           console.log("[Chat] WebSocket connected");
-          setIsConnected(true);
 
           // Send session configuration
           const config = buildSessionConfig({ mode: 'text' });
@@ -90,15 +121,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         ws.onmessage = async (event) => {
           try {
             const data = JSON.parse(event.data) as RealtimeEvent;
+            // console.log("[Chat] Event received:", data.type);
             handleRealtimeEvent(data);
           } catch (err) {
             console.error("[Chat] Error parsing event:", err);
           }
         };
 
-        ws.onclose = () => {
-          console.log("[Chat] WebSocket closed");
-          setIsConnected(false);
+        ws.onclose = (event) => {
+          console.log("[Chat] WebSocket closed", event.code, event.reason);
+          wsRef.current = null;
         };
 
         ws.onerror = (err) => {
@@ -113,6 +145,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     connect();
 
     return () => {
+      isMounted = false;
       wsRef.current?.close();
       wsRef.current = null;
     };
@@ -348,23 +381,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     }
 
     // Normal message handling via WebSocket
-    if (!isConnected || !wsRef.current) {
-        // Fallback or error if not connected
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            text: text,
-            sender: 'user',
-        };
-        const errorMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            text: "I'm currently disconnected. Please close and reopen the chat to reconnect.",
-            sender: 'bot',
-        };
-        setMessages(prev => [...prev, userMessage, errorMessage]);
-        setInputText('');
-        return;
-    }
-
     const userMessage: Message = {
       id: Date.now().toString(),
       text: text,
@@ -385,8 +401,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     setIsTyping(true);
 
     try {
+        // Wait for connection if not yet connected
+        if (wsRef.current?.readyState !== WebSocket.OPEN) {
+            console.log("[Chat] Waiting for connection...");
+            // Update placeholder to show connecting status
+            setMessages(prev => prev.map(msg =>
+                msg.id === botMsgId
+                    ? { ...msg, text: 'Connecting...' }
+                    : msg
+            ));
+            await waitForConnection(5000);
+            // Clear the "Connecting..." text once connected
+            setMessages(prev => prev.map(msg =>
+                msg.id === botMsgId
+                    ? { ...msg, text: '' }
+                    : msg
+            ));
+        }
+
         // Send user input to Realtime API
-        wsRef.current.send(JSON.stringify({
+        wsRef.current!.send(JSON.stringify({
             type: "conversation.item.create",
             item: {
                 type: "message",
@@ -400,12 +434,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
             }
         }));
 
-        wsRef.current.send(JSON.stringify({
+        wsRef.current!.send(JSON.stringify({
             type: "response.create"
         }));
 
     } catch (err) {
         console.error("Failed to send message:", err);
+        // Update placeholder with error message
+        setMessages(prev => prev.map(msg =>
+            msg.id === botMsgId
+                ? { ...msg, text: "I'm currently disconnected. Please close and reopen the chat to reconnect." }
+                : msg
+        ));
         setIsTyping(false);
     }
   };
