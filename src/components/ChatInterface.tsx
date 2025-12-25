@@ -261,6 +261,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     } else {
       disconnectFromOpenAI();
     }
+
+    // Cleanup: close WebSocket when chat is closed (component unmounts)
+    return () => {
+      disconnectFromOpenAI();
+    };
   }, [chatBackend, chatMode, connectToOpenAI, disconnectFromOpenAI]);
 
   // ============ HELPER FUNCTIONS ============
@@ -616,6 +621,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
                 onSelectModel={handleModelSwitch}
                 disabled={engineState.status === 'loading' || engineState.status === 'switching'}
                 isLoading={engineState.status === 'loading' || engineState.status === 'switching'}
+                webGpuSupported={hardware?.webgpuSupported ?? false}
               />
             )}
 

@@ -12,6 +12,7 @@ interface ModelSelectorProps {
   onSelectModel: (modelId: string) => void;
   disabled?: boolean;
   isLoading?: boolean;
+  webGpuSupported?: boolean;
 }
 
 const tierIcons: Record<ModelTier, React.ComponentType<{ size: number; className?: string }>> = {
@@ -25,22 +26,25 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   recommendedModelId,
   onSelectModel,
   disabled = false,
-  isLoading = false
+  isLoading = false,
+  webGpuSupported = true
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Combine local models with GPT-4o
-  const allModels = [
-    ...AVAILABLE_MODELS,
-    {
-      id: 'gpt-4o',
-      name: 'GPT-4o (Cloud)',
-      size: 'Serverless',
-      tier: 'cloud' as ModelTier, // Cast to satisfy TS, we handle the icon below
-      minVRAM: 0,
-      contextWindow: 128000
-    }
-  ];
+  // GPT-4o cloud option
+  const gpt4oModel = {
+    id: 'gpt-4o',
+    name: 'GPT-4o (Cloud)',
+    size: 'Serverless',
+    tier: 'cloud' as ModelTier,
+    minVRAM: 0,
+    contextWindow: 128000
+  };
+
+  // Only show local models if WebGPU is supported
+  const allModels = webGpuSupported
+    ? [...AVAILABLE_MODELS, gpt4oModel]
+    : [gpt4oModel];
 
   const currentModel = allModels.find(m => m.id === currentModelId);
 
