@@ -7,6 +7,10 @@ import jsPDF from 'jspdf';
 import { ResearchPaper } from '@/constants/research/research-papers';
 import PDFViewer from '@/components/PDFViewerWrapper';
 import Magnetic from './Magnetic';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 interface ResearchDetailProps {
   paper: ResearchPaper;
@@ -373,7 +377,21 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
       >
         <h2 className="text-2xl font-bold mb-4 text-purple-400 font-display">1. Introduction & Background</h2>
         <div className="prose prose-invert max-w-none">
-          <p className="text-gray-300 leading-relaxed whitespace-pre-line">{paper.sections.introduction}</p>
+          <div className="text-gray-300 leading-relaxed">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+              components={{
+                p: (props) => <p className="mb-4 last:mb-0" {...props} />,
+                strong: (props) => <strong className="font-bold text-white" {...props} />,
+                em: (props) => <em className="italic" {...props} />,
+                code: (props) => <code className="bg-white/10 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />,
+                a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline" />,
+              }}
+            >
+              {paper.sections.introduction}
+            </ReactMarkdown>
+          </div>
         </div>
       </motion.section>
 
@@ -410,8 +428,19 @@ export default function ResearchDetail({ paper }: ResearchDetailProps) {
           <ul className="space-y-3 text-gray-300 bg-white/5 p-6 rounded-xl">
             {paper.sections.significance.innovations.map((innovation, idx) => (
               <li key={idx} className="flex items-start gap-3">
-                <span className="text-blue-400">•</span>
-                <span dangerouslySetInnerHTML={{ __html: innovation }} />
+                <span className="text-blue-400 mt-1">•</span>
+                <span className="flex-1">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ children }) => <>{children}</>,
+                      strong: (props) => <strong className="font-bold text-white" {...props} />,
+                      code: (props) => <code className="bg-white/10 px-1 py-0.5 rounded text-sm font-mono" {...props} />,
+                    }}
+                  >
+                    {innovation}
+                  </ReactMarkdown>
+                </span>
               </li>
             ))}
           </ul>

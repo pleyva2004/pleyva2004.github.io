@@ -43,7 +43,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 
   // Only show local models if WebGPU is supported
   const allModels = webGpuSupported
-    ? [...AVAILABLE_MODELS, gpt4oModel]
+    ? [gpt4oModel, ...AVAILABLE_MODELS]
     : [gpt4oModel];
 
   const currentModel = allModels.find(m => m.id === currentModelId);

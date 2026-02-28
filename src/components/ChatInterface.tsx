@@ -61,7 +61,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
       const savedModelId = localStorage.getItem('selectedModelId');
       return savedModelId === 'gpt-4o' ? 'openai' : 'webllm';
     }
-    return 'webllm';
+    return 'openai';
   });
 
   // ============ WEBLLM HOOK ============
@@ -221,11 +221,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         ? localStorage.getItem('selectedModelId')
         : null;
 
-      // If GPT-4o was previously selected, connect to OpenAI
-      if (savedModelId === 'gpt-4o') {
-        console.log('[Chat] Restoring GPT-4o backend from localStorage');
+      // Default to GPT-4o if no saved preference, or if GPT-4o was previously selected
+      if (!savedModelId || savedModelId === 'gpt-4o') {
+        console.log('[Chat] Using GPT-4o cloud backend (default)');
         setChatBackend('openai');
-        return; // WebSocket connection will be established by the backend effect
+        localStorage.setItem('selectedModelId', 'gpt-4o');
+        return;
       }
 
       if (!hardware.webgpuSupported) {
@@ -236,14 +237,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
         return;
       }
 
-      // Use saved model ID or fall back to recommended
-      const modelToLoad = savedModelId && savedModelId !== 'gpt-4o'
-        ? savedModelId
-        : hardware.recommendedModelId;
-
-      console.log('[Chat] WebGPU supported, preloading model:', modelToLoad);
+      // User explicitly chose a local model — load it
+      console.log('[Chat] WebGPU supported, preloading saved model:', savedModelId);
       try {
-        await initializeWebLLM(modelToLoad);
+        await initializeWebLLM(savedModelId);
       } catch (err) {
         console.error('[Chat] WebLLM init failed, falling back to OpenAI:', err);
         setChatBackend('openai');
