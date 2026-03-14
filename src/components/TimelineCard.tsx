@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { TimelineItem } from '../data/timeline';
+import TiltCard from './TiltCard';
 
 interface TimelineCardProps {
   item: TimelineItem;
@@ -26,7 +27,7 @@ const TimelineCard: React.FC<TimelineCardProps> = ({ item, index }) => {
     if (cardRef.current) {
       observer.observe(cardRef.current);
     }
-    
+
     if (desktopCardRef.current) {
       observer.observe(desktopCardRef.current);
     }
@@ -34,115 +35,89 @@ const TimelineCard: React.FC<TimelineCardProps> = ({ item, index }) => {
     return () => observer.disconnect();
   }, []);
 
+  // Shared content for the card to ensure consistency
+  const CardContent = () => (
+    <div className="bg-dark-card border border-dark-border rounded-xl p-6 h-full backdrop-blur-md shadow-2xl shadow-blue-900/5 group-hover:border-blue-500/30 transition-all duration-300">
+      {/* Role Badge */}
+      <div className="mb-3">
+        <span className="inline-block bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-blue-500/20">
+          {item.role}
+        </span>
+      </div>
+
+      {/* Company */}
+      <div className="mb-3 flex items-center">
+        <h3 className="text-white font-bold text-lg font-display tracking-tight">
+          {item.companyUrl ? (
+            <a
+              href={item.companyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-400 transition-colors inline-flex items-center gap-2 group"
+            >
+              {item.company}
+              <ExternalLink size={16} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 opacity-70 group-hover:opacity-100" />
+            </a>
+          ) : (
+            item.company
+          )}
+        </h3>
+      </div>
+
+      {/* Description */}
+      <p className="text-gray-400 leading-relaxed text-sm font-sans">
+        {item.description}
+      </p>
+
+      {/* Date - Mobile Only display inside card usually, but we keep structure */}
+      <div className="md:hidden mt-4 pt-4 border-t border-white/5">
+        <span className="text-gray-500 text-xs font-mono">
+          {item.period}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <>
       {/* Mobile Layout */}
-      <div className="md:hidden mb-8 opacity-0 transform translate-y-8 transition-all duration-700 ease-out"
-           ref={cardRef}
-           style={{ animationDelay: `${index * 200}ms` }}>
-        
-        {/* Mobile Timeline Dot */}
-        <div className="flex items-start">
-          <div className="flex-shrink-0 w-12 flex justify-center">
-            <div className="w-4 h-4 bg-blue-500 rounded-full border-4 border-dark-bg z-10 animate-pulse-dot mt-2"></div>
-          </div>
-          
-          {/* Mobile Card */}
-          <div className="flex-1 ml-4">
-            <div className="bg-dark-card border border-dark-border rounded-lg p-4 hover:border-blue-500/50 hover:transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10">
-              {/* Date - Mobile */}
-              <div className="mb-2">
-                <span className="text-gray-400 text-xs font-medium">
-                  {item.period}
-                </span>
-              </div>
+      <div className="md:hidden mb-12 opacity-0 transform translate-y-8 transition-all duration-700 ease-out"
+        ref={cardRef}
+        style={{ animationDelay: `${index * 200}ms` }}>
 
-              {/* Role Badge - Mobile */}
-              <div className="mb-3">
-                <span className="inline-block bg-blue-600/20 text-blue-400 px-2 py-1 rounded-full text-xs font-medium border border-blue-500/30 animate-pulse-subtle">
-                  {item.role}
-                </span>
-              </div>
+        <div className="relative pl-8 border-l-2 border-blue-900/30 ml-3">
+          {/* Dot */}
+          <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-black border-2 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
 
-              {/* Company - Mobile */}
-              <div className="mb-3 flex items-center">
-                <h3 className="text-white font-semibold text-base">
-                  {item.companyUrl ? (
-                    <a 
-                      href={item.companyUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:text-blue-400 transition-colors inline-flex items-center gap-1 group"
-                    >
-                      {item.company}
-                      <ExternalLink size={14} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                    </a>
-                  ) : (
-                    item.company
-                  )}
-                </h3>
-              </div>
-
-              {/* Description - Mobile */}
-              <p className="text-gray-300 leading-relaxed text-sm">
-                {item.description}
-              </p>
-            </div>
-          </div>
+          <TiltCard className="w-full">
+            <CardContent />
+          </TiltCard>
         </div>
       </div>
 
-      {/* Desktop Layout - Hidden on mobile */}
-      <div className={`hidden md:flex items-center mb-16 opacity-0 transform translate-y-8 transition-all duration-700 ease-out ${
-        item.position === 'right' ? 'flex-row-reverse' : ''
-      }`}
-           ref={desktopCardRef}
-           style={{ animationDelay: `${index * 200}ms` }}>
-        
+      {/* Desktop Layout */}
+      <div className={`hidden md:flex items-center mb-24 opacity-0 transform translate-y-8 transition-all duration-700 ease-out w-full ${item.position === 'right' ? 'flex-row-reverse' : ''
+        }`}
+        ref={desktopCardRef}
+        style={{ animationDelay: `${index * 200}ms` }}>
+
         {/* Desktop Card */}
-        <div className={`w-5/12 ${item.position === 'right' ? 'ml-8' : 'mr-8'}`}>
-          <div className="bg-dark-card border border-dark-border rounded-lg p-6 hover:border-blue-500/50 hover:transform hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10">
-            {/* Role Badge */}
-            <div className="mb-3">
-              <span className="inline-block bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-sm font-medium border border-blue-500/30 animate-pulse-subtle">
-                {item.role}
-              </span>
-            </div>
-
-            {/* Company */}
-            <div className="mb-3 flex items-center">
-              <h3 className="text-white font-semibold text-lg">
-                {item.companyUrl ? (
-                  <a 
-                    href={item.companyUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="hover:text-blue-400 transition-colors inline-flex items-center gap-1 group"
-                  >
-                    {item.company}
-                    <ExternalLink size={16} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                  </a>
-                ) : (
-                  item.company
-                )}
-              </h3>
-            </div>
-
-            {/* Description */}
-            <p className="text-gray-300 leading-relaxed">
-              {item.description}
-            </p>
-          </div>
+        <div className={`w-[45%] ${item.position === 'right' ? 'ml-auto pl-12' : 'mr-auto pr-12'}`}>
+          <TiltCard>
+            <CardContent />
+          </TiltCard>
         </div>
 
-        {/* Desktop Timeline dot */}
-        <div className="relative flex items-center justify-center">
-          <div className="w-4 h-4 bg-blue-500 rounded-full border-4 border-dark-bg z-10 animate-pulse-dot"></div>
+        {/* Center Point - processed in parent timeline usually, but we keep generic dot here if needed,
+            though Timeline.tsx handles the main line. We just need the connection point. */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+          {/* The glowing dot on the line */}
+          <div className="w-4 h-4 rounded-full bg-black border-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] z-10"></div>
         </div>
 
         {/* Desktop Date */}
-        <div className={`w-5/12 ${item.position === 'right' ? 'mr-12 text-right' : 'ml-12'}`}>
-          <span className="text-gray-400 text-sm font-medium">
+        <div className={`w-[45%] ${item.position === 'right' ? 'mr-auto pr-12 text-right' : 'ml-auto pl-12 text-left'}`}>
+          <span className="text-gray-500 text-sm font-mono tracking-widest uppercase">
             {item.period}
           </span>
         </div>

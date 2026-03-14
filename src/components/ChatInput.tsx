@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useChatContext } from '@/contexts/ChatContext';
+import { buildSessionConfig, RESEARCH_SYSTEM_PROMPT } from '@/lib/realtime/session-config';
+import type { RealtimeEvent } from '@/lib/realtime/types';
 
 // Type for webkit CSS properties
 interface WebkitCSSStyleDeclaration extends CSSStyleDeclaration {
@@ -10,11 +12,13 @@ interface WebkitCSSStyleDeclaration extends CSSStyleDeclaration {
 }
 
 interface Message {
-  id: number;
+  id: string; // Changed to string to match Realtime API IDs
   text: string;
   isUser: boolean;
   timestamp: Date;
 }
+
+const API_URL = "/api";
 
 const ChatInput: React.FC = () => {
   const { pageContext } = useChatContext();
@@ -22,34 +26,157 @@ const ChatInput: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isCollapsing, setIsCollapsing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Used for "Connecting..." or initial wait
+  const [isConnected, setIsConnected] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [customHeight, setCustomHeight] = useState(384); // 24rem = 384px
   const [isDragging, setIsDragging] = useState(false);
-  const ORIGINAL_HEIGHT = 384; // Add this constant
+  const ORIGINAL_HEIGHT = 384;
 
-  // Handle vertical drag to resize height - UPDATED for mobile support
+  const wsRef = useRef<WebSocket | null>(null);
+  const currentResponseIdRef = useRef<string | null>(null);
+
+  // --- Realtime API Connection Logic ---
+
+  useEffect(() => {
+    // Connect to Realtime API on mount
+    let isMounted = true;
+
+    const connect = async () => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
+      try {
+        console.log("[ChatInput] Requesting ephemeral token...");
+        const tokenRes = await fetch(`${API_URL}/realtime`, { method: "POST" });
+        if (!tokenRes.ok) throw new Error("Failed to get session token");
+
+        const data = await tokenRes.json();
+        const secret = data.client_secret.value;
+
+        if (!isMounted) return;
+
+        console.log("[ChatInput] Connecting to OpenAI Realtime...");
+        const ws = new WebSocket(
+          "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",
+          [
+            "realtime",
+            `openai-insecure-api-key.${secret}`,
+            "openai-beta.realtime-v1",
+          ]
+        );
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          if (!isMounted) {
+            ws.close();
+            return;
+          }
+          console.log("[ChatInput] WebSocket connected");
+          setIsConnected(true);
+
+          // Initial session update will be handled by the pageContext effect
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data) as RealtimeEvent;
+            handleRealtimeEvent(data);
+          } catch (err) {
+            console.error("[ChatInput] Error parsing event:", err);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log("[ChatInput] WebSocket closed");
+          setIsConnected(false);
+          wsRef.current = null;
+        };
+
+        ws.onerror = (err) => {
+          console.error("[ChatInput] WebSocket error:", err);
+          setIsConnected(false);
+        };
+
+      } catch (err) {
+        console.error("[ChatInput] Connection failed:", err);
+        setIsConnected(false);
+      }
+    };
+
+    connect();
+
+    return () => {
+      isMounted = false;
+      wsRef.current?.close();
+      wsRef.current = null;
+    };
+  }, []);
+
+  // Update session instructions when pageContext changes
+  useEffect(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN && pageContext) {
+      const contextString = JSON.stringify(pageContext, null, 2);
+      const systemInstructions = `${RESEARCH_SYSTEM_PROMPT}\n\nCURRENT PAGE CONTEXT:\n${contextString}`;
+
+      const config = buildSessionConfig({
+        mode: 'text',
+        systemInstructions: systemInstructions
+      });
+
+      console.log("[ChatInput] Updating session with new context");
+      wsRef.current.send(JSON.stringify({
+        type: 'session.update',
+        session: config
+      }));
+    }
+  }, [pageContext, isConnected]);
+
+
+  const handleRealtimeEvent = async (event: RealtimeEvent) => {
+    switch (event.type) {
+      case 'response.text.delta': {
+        const delta = event.delta || '';
+        if (currentResponseIdRef.current) {
+          setMessages(prev => prev.map(msg =>
+            msg.id === currentResponseIdRef.current
+              ? { ...msg, text: msg.text + delta }
+              : msg
+          ));
+        }
+        break;
+      }
+
+      case 'response.done': {
+        setIsLoading(false);
+        break;
+      }
+
+      // Handle other events like function calls if needed, similar to ChatInterface
+    }
+  };
+
+
+  // --- UI/UX Handlers ---
+
+  // Handle vertical drag to resize height
   useEffect(() => {
     const handleMove = (clientY: number) => {
       if (isDragging) {
-        const newHeight = Math.max(ORIGINAL_HEIGHT, window.innerHeight - clientY); // Use original height as floor
+        const newHeight = Math.max(ORIGINAL_HEIGHT, window.innerHeight - clientY);
         setCustomHeight(newHeight);
       }
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      handleMove(e.clientY);
-    };
-
+    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientY);
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault(); // Prevent scrolling
+      e.preventDefault();
       handleMove(e.touches[0].clientY);
     };
 
     const handleEnd = () => {
       setIsDragging(false);
-      // Re-enable text selection - Enhanced for mobile
       const bodyStyle = document.body.style as WebkitCSSStyleDeclaration;
       bodyStyle.userSelect = '';
       bodyStyle.webkitUserSelect = '';
@@ -59,14 +186,13 @@ const ChatInput: React.FC = () => {
     };
 
     if (isDragging) {
-      // Disable text selection during drag - Enhanced for mobile
       const bodyStyle = document.body.style as WebkitCSSStyleDeclaration;
       bodyStyle.userSelect = 'none';
       bodyStyle.webkitUserSelect = 'none';
       bodyStyle.webkitTouchCallout = 'none';
       bodyStyle.webkitTapHighlightColor = 'transparent';
       document.onselectstart = () => false;
-      
+
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleEnd);
       document.addEventListener('touchmove', handleTouchMove);
@@ -78,7 +204,6 @@ const ChatInput: React.FC = () => {
       document.removeEventListener('mouseup', handleEnd);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleEnd);
-      // Ensure text selection is re-enabled on cleanup - Enhanced for mobile
       const bodyStyle = document.body.style as WebkitCSSStyleDeclaration;
       bodyStyle.userSelect = '';
       bodyStyle.webkitUserSelect = '';
@@ -89,7 +214,7 @@ const ChatInput: React.FC = () => {
   }, [isDragging]);
 
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom
   useEffect(() => {
     if (messagesEndRef.current && isExpanded) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -107,66 +232,59 @@ const ChatInput: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
+      const userText = message.trim();
+
       // Add user message
       const userMessage: Message = {
-        id: Date.now(),
-        text: message.trim(),
+        id: Date.now().toString(),
+        text: userText,
         isUser: true,
         timestamp: new Date()
       };
-      
-      setMessages(prev => [...prev, userMessage]);
+
+      // Prepare bot message placeholder
+      const botMsgId = (Date.now() + 1).toString();
+      const botMessage: Message = {
+        id: botMsgId,
+        text: '',
+        isUser: false,
+        timestamp: new Date()
+      };
+      currentResponseIdRef.current = botMsgId;
+
+      setMessages(prev => [...prev, userMessage, botMessage]);
       setMessage('');
       setIsLoading(true);
 
-      // Get AI response
-      try {
-
-        const tempMessages = messages.slice(-3);
-
-        const history = tempMessages.map(message => ({
-          text: message.text,
-          sender: message.isUser ? 'user' : 'bot'
-        }));
-          
-
-        const body = {
-          question: message.trim(),
-          context: pageContext,
-          history: history
-        }
-
-
-        const response = await fetch('/api/ask', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(body),
-        });
-        
-
-
-
-
-
-        const data = await response.json();
-        const aiMessage: Message = {
-          id: Date.now() + 1,
-          text: data.message || "Sorry, I couldn't process that request.",
-          isUser: false,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMessage]);
+      if (!isConnected || !wsRef.current) {
+        setMessages(prev => prev.map(msg =>
+          msg.id === botMsgId ? { ...msg, text: "Connection lost. Please refresh the page." } : msg
+        ));
         setIsLoading(false);
-      } catch {
-        const errorMessage: Message = {
-          id: Date.now() + 1,
-          text: "Sorry, I'm having trouble connecting right now. Please try again.",
-          isUser: false,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, errorMessage]);
+        return;
+      }
+
+      try {
+        // Send user input
+        wsRef.current.send(JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: userText }]
+          }
+        }));
+
+        // Trigger response
+        wsRef.current.send(JSON.stringify({
+          type: "response.create"
+        }));
+
+      } catch (err) {
+        console.error("[ChatInput] Failed to send:", err);
+        setMessages(prev => prev.map(msg =>
+          msg.id === botMsgId ? { ...msg, text: "Failed to send message." } : msg
+        ));
         setIsLoading(false);
       }
     }
@@ -180,7 +298,6 @@ const ChatInput: React.FC = () => {
 
   const handleMinimize = () => {
     setIsCollapsing(true);
-    // Wait for animation to complete before hiding content
     setTimeout(() => {
       setIsExpanded(false);
       setIsCollapsing(false);
@@ -191,89 +308,23 @@ const ChatInput: React.FC = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      // Trigger submit logic directly
-      if (message.trim()) {
-        // Add user message
-        const userMessage: Message = {
-          id: Date.now(),
-          text: message.trim(),
-          isUser: true,
-          timestamp: new Date()
-        };
-        
-        setMessages(prev => [...prev, userMessage]);
-        setMessage('');
-        setIsLoading(true);
-
-        // Get AI response
-        try {
-          const tempMessages = messages.slice(-3);
-          const history = tempMessages.map(message => ({
-            text: message.text,
-            sender: message.isUser ? 'user' : 'bot'
-          }));
-            
-          const body = {
-            question: message.trim(),
-            context: pageContext,
-            history: history
-          }
-
-          fetch('/api/ask', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-          }).then(async (response) => {
-            const data = await response.json();
-            const aiMessage: Message = {
-              id: Date.now() + 1,
-              text: data.message || "Sorry, I couldn't process that request.",
-              isUser: false,
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, aiMessage]);
-            setIsLoading(false);
-          }).catch(() => {
-            const errorMessage: Message = {
-              id: Date.now() + 1,
-              text: "Sorry, I'm having trouble connecting right now. Please try again.",
-              isUser: false,
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, errorMessage]);
-            setIsLoading(false);
-          });
-        } catch {
-          const errorMessage: Message = {
-            id: Date.now() + 1,
-            text: "Sorry, I'm having trouble connecting right now. Please try again.",
-            isUser: false,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, errorMessage]);
-          setIsLoading(false);
-        }
-      }
+      handleSubmit(e);
     }
   };
 
   return (
     <div className="fixed left-0 right-0 z-30 bottom-0">
       <div
-        className={`bg-dark-card/50 backdrop-blur-md border border-accent-blue/20 rounded-t-2xl overflow-hidden ${
-          isDragging ? '' : 'transition-all duration-1000 ease-out'
-        }`}
+        className={`bg-dark-card/50 backdrop-blur-md border border-white/10 rounded-t-2xl overflow-hidden ${isDragging ? '' : 'transition-all duration-1000 ease-out'
+          }`}
         style={{ height: isExpanded ? `${customHeight}px` : 'auto' }}
       >
         <div className="max-w-4xl mx-auto">
           {/* Drag Handle */}
           {isExpanded && (
             <div
-              className={`h-2 w-full cursor-ns-resize hover:bg-accent-blue/30 transition-colors ${
-                isDragging ? 'bg-accent-blue/40' : ''
-              }`}
+              className={`h-2 w-full cursor-ns-resize hover:bg-white/10 transition-colors ${isDragging ? 'bg-white/20' : ''
+                }`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -287,22 +338,21 @@ const ChatInput: React.FC = () => {
             />
           )}
           {/* Expanded Chat Area */}
-          <div className={`transition-all duration-1000 ${
-            isExpanded
+          <div className={`transition-all duration-1000 ${isExpanded
               ? isCollapsing
                 ? 'opacity-0 transform translate-y-4'
                 : 'opacity-100 transform translate-y-0'
               : 'opacity-0 transform translate-y-4 h-0'
-          }`} style={{ height: isExpanded ? `${customHeight - (window.innerWidth >= 768 ? 120 : 135)}px` : '0' }}>
+            }`} style={{ height: isExpanded ? `${customHeight - (window.innerWidth >= 768 ? 120 : 135)}px` : '0' }}>
             {/* Chat Header */}
-            <div className="flex items-center justify-between p-4 border-b border-accent-blue/20">
-              <div className="flex items-center space-x-3 px-4 py-2 rounded-2xl bg-dark-bg border border-accent-blue/30">
-                {/* <div className="w-3 h-3 bg-gradient-to-r from-accent-blue to-accent-purple rounded-full"></div> */}
-                <h3 className="font-medium text-white">Levrok Labs AI</h3>
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <div className="flex items-center space-x-3 px-4 py-2 rounded-2xl bg-dark-bg border border-white/10">
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`}></div>
+                <h3 className="font-medium text-white font-display">Levrok Labs AI Research Assistant</h3>
               </div>
               <button
                 onClick={handleMinimize}
-                className="w-6 h-6 text-gray-400 hover:text-accent-blue transition-colors flex items-center justify-center"
+                className="w-6 h-6 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
               >
                 <span className="text-lg leading-none">−</span>
               </button>
@@ -310,9 +360,9 @@ const ChatInput: React.FC = () => {
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4" style={{ height: 'calc(100% - 64px)' }}>
-              {messages.length === 0 && !isLoading ? (
+              {messages.length === 0 ? (
                 <div className="text-center text-gray-400 py-8">
-                  <p className="text-sm">Ask about Pablo&apos;s research</p>
+                  <p className="text-sm">Ask detailed questions about this research...</p>
                 </div>
               ) : (
                 <>
@@ -322,11 +372,10 @@ const ChatInput: React.FC = () => {
                       className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                          msg.isUser
-                            ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white border border-accent-blue/30'
-                            : 'bg-dark-bg text-gray-200 border border-accent-blue/20'
-                        }`}
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${msg.isUser
+                            ? 'bg-blue-600 text-white border border-blue-500/30'
+                            : 'bg-dark-bg text-gray-200 border border-white/10'
+                          }`}
                       >
                         <div className="text-sm">
                           <ReactMarkdown
@@ -340,30 +389,23 @@ const ChatInput: React.FC = () => {
                             {msg.text}
                           </ReactMarkdown>
                         </div>
-                        {/* <p className="text-xs opacity-70 mt-1">
-                          {msg.timestamp.toLocaleTimeString()}
-                        </p> */}
                       </div>
                     </div>
                   ))}
 
-                  {/* Loading Animation */}
-                  {isLoading && (
+                  {/* Typing Indicator */}
+                  {isLoading && !messages[messages.length - 1]?.text && (
                     <div className="flex justify-start">
-                      <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl bg-dark-bg border border-accent-blue/20">
-                        <div className="flex items-center space-x-2">
-                          <div className="flex space-x-1">
+                      <div className="px-4 py-3 rounded-2xl bg-dark-bg border border-white/10">
+                        <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce"></div>
                           <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                           <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                          </div>
-                          {/* <span className="text-xs text-gray-400">Levrok Labs is thinking...</span> */}
                         </div>
                       </div>
                     </div>
                   )}
-                  
-                  {/* Scroll anchor */}
+
                   <div ref={messagesEndRef} />
                 </>
               )}
@@ -380,28 +422,26 @@ const ChatInput: React.FC = () => {
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onFocus={handleInputFocus}
-                  disabled={isLoading}
                   rows={1}
-                  placeholder={isExpanded ? "Continue the conversation..." : "Ask about Pablo's research..."}
-                  className="w-full px-4 py-3 pr-12 bg-dark-bg/60 border border-accent-blue/30 rounded-2xl text-white placeholder-gray-500 resize-none overflow-hidden
-                    focus:outline-none focus:border-accent-blue/50 focus:ring-2 focus:ring-accent-blue/20
-                    hover:border-accent-blue/40 hover:bg-dark-bg/80
-                    transition-all duration-300"
+                  placeholder={isExpanded ? "Ask a follow-up question..." : "Ask about this research paper..."}
+                  className="w-full px-4 py-3 pr-12 bg-dark-bg/80 border border-white/10 rounded-2xl text-white placeholder-gray-500 resize-none overflow-hidden
+                    focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20
+                    hover:border-white/20 transition-all duration-300 backdrop-blur-sm"
                   style={{ minHeight: '48px' }}
                 />
                 <button
                   type="submit"
                   disabled={!message.trim() || isLoading}
-                  className="absolute right-2 bottom-3 w-8 h-8 bg-gradient-to-r from-accent-blue to-accent-purple text-white rounded-full flex items-center justify-center hover:scale-105 transition-all duration-300 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:from-gray-700 disabled:to-gray-700"
+                  className="absolute right-2 bottom-3 w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-all duration-300 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  <span className="text-sm">→</span>
+                  <span className="text-sm font-bold">→</span>
                 </button>
               </div>
             </form>
 
             {!isExpanded && (
-              <p className="text-xs text-gray-500 text-center mt-2">
-                AI can make mistakes. Consider checking important information. Press Enter to send, Shift+Enter for new line.
+              <p className="text-xs text-gray-500 text-center mt-2 font-mono">
+                Powered by OpenAI Realtime API. Context-aware research assistant.
               </p>
             )}
           </div>

@@ -29,13 +29,13 @@ export default function ResearchDetailPage() {
 
   if (!paper) {
     return (
-      <div className="min-h-screen bg-dark-bg text-white flex items-center justify-center">
+      <div className="min-h-screen text-foreground flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4 text-accent-blue">Research Not Found</h1>
+          <h1 className="text-4xl font-bold mb-4 font-display text-blue-500">Research Not Found</h1>
           <p className="text-gray-400 mb-8">The research paper you&apos;re looking for doesn&apos;t exist.</p>
           <Link
             href="/research"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/80 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors backdrop-blur-md border border-white/5"
           >
             <FiArrowLeft />
             Back to Research
@@ -46,13 +46,13 @@ export default function ResearchDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white">
+    <div className="min-h-screen text-foreground">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-bg/80 backdrop-blur-md border-b border-accent-blue/20">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-card/80 backdrop-blur-md border-b border-white/10">
         <div className="max-w-full px-6 py-4">
           <Link
             href="/research"
-            className="inline-flex items-center gap-2 text-accent-blue hover:text-accent-blue/80 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
             <FiArrowLeft /> Back to Research
           </Link>
