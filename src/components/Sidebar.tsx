@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNetworkToggle, onChatToggle }) => {
       </div>
 
       {/* Mobile Sidebar - Below header, top right */}
-      <div className="md:hidden fixed top-20 right-4 z-50">
+      <div className="md:hidden fixed top-20 left-[10px] z-50">
         <div className="bg-dark-card rounded-full p-2 flex space-x-2 border border-gray-800">
           {/* Home Button */}
           <button
